@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Kur {
+public class Main {
 
 	private static List<String> followers = new ArrayList<>();
 
