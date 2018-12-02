@@ -1,8 +1,10 @@
 package com.instabot.core.request;
 
+import com.instabot.core.collections.UserCommentsCollection;
 import com.instabot.core.filter.CommentFilter;
 import com.instabot.core.filter.IGFilter;
 import com.instabot.core.filter.UserFilter;
+import com.instabot.core.strategy.UserSortingStrategy;
 import org.apache.commons.lang3.StringUtils;
 import org.brunocvcunha.instagram4j.Instagram4j;
 import org.brunocvcunha.instagram4j.requests.InstagramGetMediaCommentsRequest;
@@ -13,7 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class IGCommentsReq {
@@ -23,19 +26,19 @@ public class IGCommentsReq {
 	private static final int TIMEOUT_SLEEP_SECONDS = 30;
 	private static final int MAX_USER_COMMENTS_ON_PHOTO = 5;
 
-	private final Map<String, List<String>> userComments;
+	private UserCommentsCollection userComments;
 	private Instagram4j executor;
 	private List<IGFilter> filters;
 	private String mediaId;
 	private String nextMediaPage;
 
 	public IGCommentsReq(Instagram4j executor, String mediaCode) {
-		this.userComments = new HashMap<>();
+		this.userComments = new UserCommentsCollection();
 		this.executor = executor;
 		this.mediaId = InstagramCodeUtil.fromCode(mediaCode) + "";
 	}
 
-	public Map<String, List<String>> execute() {
+	public Map<String, Integer> execute() {
 
 		LOGGER.info("Starting to collect comments for media: {}", mediaId);
 
@@ -48,12 +51,11 @@ public class IGCommentsReq {
 		cleanSpammyUsers();
 
 		LOGGER.info("Successfully collected {} comments", userComments.size());
-		return Collections.unmodifiableMap(userComments);
+		return userComments.normalize();
 	}
 
-	@SafeVarargs
-	public final IGCommentsReq applyFilters(Class<? extends IGFilter>... filters) {
-		this.filters = initializeFilters(Arrays.stream(filters).collect(Collectors.toList()));
+	public final IGCommentsReq applyFilters(List<Class<? extends IGFilter>> filters) {
+		this.filters = initializeFilters(filters);
 		return this;
 	}
 
@@ -81,12 +83,8 @@ public class IGCommentsReq {
 								}
 							}
 
-							if (isUserValid(user) && isCommentValid(commentText)) {
-								if (!userComments.containsKey(user.username))
-									userComments.put(user.username, new ArrayList<>());
-
-								userComments.get(user.username).add(commentText);
-							}
+							if (isUserValid(user) && isCommentValid(commentText))
+								userComments.addComment(user.username, commentText);
 						});
 
 				nextMediaPage = commentsResult.getNext_max_id();
@@ -130,11 +128,11 @@ public class IGCommentsReq {
 						.map(Map.Entry::getKey)
 						.collect(Collectors.toList());
 
-		// Save the filtered comments as file
+		//Save the filtered comments as file
 		//		try {
 		//			FileUtils.writeLines(new File("ignored-comments-" + mediaId + ".txt"),
 		//					blackListedUsers
-		//							.stream().map(userComments::get).collect(Collectors.toList())
+		//							.stream().map(userComments::getComments).collect(Collectors.toList())
 		//							.stream().map(Object::toString).collect(Collectors.toList()));
 		//		} catch (IOException e) {
 		//			e.printStackTrace();
@@ -142,5 +140,10 @@ public class IGCommentsReq {
 
 		blackListedUsers.forEach(userComments::remove);
 		LOGGER.debug("Successfully removed {} users", blackListedUsers.size());
+	}
+
+	public IGCommentsReq applyUserSortingStrategy(Class<? extends UserSortingStrategy> strategy) {
+		this.userComments.setSortStrategy(strategy);
+		return this;
 	}
 }

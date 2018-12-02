@@ -35,4 +35,5 @@ public final class IGUtils {
 
 		return user;
 	}
+
 }
