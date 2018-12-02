@@ -3,6 +3,7 @@ package com.instabot.core;
 import com.instabot.core.filter.NoPhotoUserFilter;
 import com.instabot.core.filter.SpamCommentFilter;
 import com.instabot.core.request.IGCommentsReq;
+import com.instabot.core.util.IGUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.brunocvcunha.instagram4j.Instagram4j;
@@ -20,10 +21,10 @@ public class Main {
 
 	public static void main(String[] args) throws IOException {
 
-		Instagram4j user1 = login("testzdr", "1111112");
+		Instagram4j user1 = IGUtils.login("testzdr", "1111112");
 
 		Map<String, List<String>> userComments =
-				new IGCommentsReq(user1, "Bq2b8zODozZ")
+				new IGCommentsReq(user1, "Bqbyb9nBmnR")
 						.applyFilters(
 								SpamCommentFilter.class,
 								NoPhotoUserFilter.class)
@@ -38,13 +39,6 @@ public class Main {
 		}
 
 		System.out.println(userComments.size());
-	}
-
-	private static Instagram4j login(String username, String password) throws ClientProtocolException, IOException {
-		Instagram4j user = Instagram4j.builder().username(username).password(password).build();
-		user.setup();
-		user.login();
-		return user;
 	}
 
 	private static void saveFollowers(Instagram4j user, long userId)

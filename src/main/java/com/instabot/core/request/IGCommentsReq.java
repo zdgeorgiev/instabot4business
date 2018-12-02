@@ -21,7 +21,7 @@ public class IGCommentsReq {
 	private static final Logger LOGGER = LoggerFactory.getLogger(IGCommentsReq.class);
 
 	private static final int TIMEOUT_SLEEP_SECONDS = 30;
-	private static final int MAX_USER_COMMENTS_ON_PHOTO = 3;
+	private static final int MAX_USER_COMMENTS_ON_PHOTO = 5;
 
 	private final Map<String, List<String>> userComments;
 	private Instagram4j executor;
@@ -44,6 +44,8 @@ public class IGCommentsReq {
 		} catch (InterruptedException e) {
 			LOGGER.error("Thread cannot sleep", e);
 		}
+
+		cleanSpammyUsers();
 
 		LOGGER.info("Successfully collected {} comments", userComments.size());
 		return Collections.unmodifiableMap(userComments);
@@ -69,11 +71,11 @@ public class IGCommentsReq {
 							InstagramUser user = comment.getUser();
 							String commentText = comment.getText();
 
-							for (IGFilter filter : filters) {
+							for (IGFilter<?> filter : filters) {
 								if (filter instanceof CommentFilter)
-									commentText = (String) filter.apply(commentText);
+									commentText = ((CommentFilter) filter).apply(commentText);
 								else if (filter instanceof UserFilter) {
-									user = (InstagramUser) filter.apply(user);
+									user = ((UserFilter) filter).apply(user);
 								} else {
 									throw new UnsupportedOperationException("Not supporting " + filter.getClass().getName());
 								}
@@ -117,5 +119,28 @@ public class IGCommentsReq {
 				throw new RuntimeException("Cannot create filter " + filter.getName(), e);
 			}
 		}).collect(Collectors.toList());
+	}
+
+	private void cleanSpammyUsers() {
+		LOGGER.debug("Starting to remove users with more than {} comments", MAX_USER_COMMENTS_ON_PHOTO);
+
+		List<String> blackListedUsers =
+				userComments.entrySet().stream()
+						.filter(user -> user.getValue().size() > MAX_USER_COMMENTS_ON_PHOTO)
+						.map(Map.Entry::getKey)
+						.collect(Collectors.toList());
+
+		// Save the filtered comments as file
+		//		try {
+		//			FileUtils.writeLines(new File("ignored-comments-" + mediaId + ".txt"),
+		//					blackListedUsers
+		//							.stream().map(userComments::get).collect(Collectors.toList())
+		//							.stream().map(Object::toString).collect(Collectors.toList()));
+		//		} catch (IOException e) {
+		//			e.printStackTrace();
+		//		}
+
+		blackListedUsers.forEach(userComments::remove);
+		LOGGER.debug("Successfully removed {} users", blackListedUsers.size());
 	}
 }

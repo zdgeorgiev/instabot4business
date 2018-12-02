@@ -56,7 +56,7 @@
   </build>
 
   <scm>
-	<connection>scm:git:https://github.com/zdgeorgiev/Bet-Bot.git</connection>
+	<connection>scm:git:https://github.com/zdgeorgiev/instabot4business.git</connection>
 	<tag>HEAD</tag>
   </scm>
 
