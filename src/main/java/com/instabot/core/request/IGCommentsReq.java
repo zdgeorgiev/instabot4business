@@ -1,5 +1,6 @@
 package com.instabot.core.request;
 
+import com.instabot.core.client.instagram4j.Instagram4jIG;
 import com.instabot.core.collections.UserCommentsCollection;
 import com.instabot.core.filter.CommentFilter;
 import com.instabot.core.filter.IGFilter;
@@ -27,14 +28,14 @@ public class IGCommentsReq {
 	private static final int MAX_USER_COMMENTS_ON_PHOTO = 5;
 
 	private UserCommentsCollection userComments;
-	private Instagram4j executor;
+	private Instagram4j userClient;
 	private List<IGFilter> filters;
 	private String mediaId;
 	private String nextMediaPage;
 
-	public IGCommentsReq(Instagram4j executor, String mediaCode) {
+	public IGCommentsReq(String mediaCode) {
 		this.userComments = new UserCommentsCollection();
-		this.executor = executor;
+		this.userClient = Instagram4jIG.getClient();
 		this.mediaId = InstagramCodeUtil.fromCode(mediaCode) + "";
 	}
 
@@ -66,7 +67,7 @@ public class IGCommentsReq {
 		try {
 			while (true) {
 				InstagramGetMediaCommentsResult commentsResult =
-						executor.sendRequest(new InstagramGetMediaCommentsRequest(mediaId, nextMediaPage));
+						userClient.sendRequest(new InstagramGetMediaCommentsRequest(mediaId, nextMediaPage));
 
 				commentsResult.getComments()
 						.forEach(comment -> {
@@ -127,16 +128,6 @@ public class IGCommentsReq {
 						.filter(user -> user.getValue().size() > MAX_USER_COMMENTS_ON_PHOTO)
 						.map(Map.Entry::getKey)
 						.collect(Collectors.toList());
-
-		//Save the filtered comments as file
-		//		try {
-		//			FileUtils.writeLines(new File("ignored-comments-" + mediaId + ".txt"),
-		//					blackListedUsers
-		//							.stream().map(userComments::getComments).collect(Collectors.toList())
-		//							.stream().map(Object::toString).collect(Collectors.toList()));
-		//		} catch (IOException e) {
-		//			e.printStackTrace();
-		//		}
 
 		blackListedUsers.forEach(userComments::remove);
 		LOGGER.debug("Successfully removed {} users", blackListedUsers.size());

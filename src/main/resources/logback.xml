@@ -1,0 +1,33 @@
+<configuration>
+
+  <appender name="FILE-AUDIT"
+			class="ch.qos.logback.core.rolling.RollingFileAppender">
+	<file>debug.log</file>
+	<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+	  <Pattern>
+		%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+	  </Pattern>
+	</encoder>
+
+	<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+	  <!-- rollover daily -->
+	  <fileNamePattern>ig-bot.%d{yyyy-MM-dd}.%i.log
+	  </fileNamePattern>
+	  <timeBasedFileNamingAndTriggeringPolicy
+			  class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+		<maxFileSize>10MB</maxFileSize>
+	  </timeBasedFileNamingAndTriggeringPolicy>
+	</rollingPolicy>
+	<param name="Append" value="false"/>
+  </appender>
+
+  <logger name="com.instabot.core" level="info"
+		  additivity="false">
+	<appender-ref ref="FILE-AUDIT"/>
+  </logger>
+
+  <root level="error">
+	<appender-ref ref="FILE-AUDIT"/>
+  </root>
+
+</configuration>
