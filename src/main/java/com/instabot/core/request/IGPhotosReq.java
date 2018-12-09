@@ -23,13 +23,13 @@ public class IGPhotosReq {
 		this.seleniumClient = SeleniumIG.getClient();
 	}
 
-	public Collection<String> getMediaIds(String username, int count) {
+	public Collection<String> getMediaIds(String username, int lastPhotosCount) {
 
 		Set<String> mediaUrls = new HashSet<>();
 
 		seleniumClient.get(String.format(IG_PROFILE_URL, username));
 
-		while (mediaUrls.size() < count) {
+		while (mediaUrls.size() < lastPhotosCount) {
 
 			int previousIterationPhotosCount = mediaUrls.size();
 
@@ -53,7 +53,7 @@ public class IGPhotosReq {
 
 		return mediaUrls.stream()
 				.map(x -> x.substring(x.indexOf("p/") + 2, x.lastIndexOf("/")))
-				.limit(count)
+				.limit(lastPhotosCount)
 				.collect(Collectors.toList());
 	}
 }
