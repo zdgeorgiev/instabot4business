@@ -27,6 +27,8 @@ public final class Instagram4jIG {
 			return userClient;
 		}
 
+		LOGGER.info("Initializing user {}...", IG_USERNAME);
+
 		userClient = Instagram4j.builder()
 				.username(IG_USERNAME)
 				.password(IG_PASSWORD)

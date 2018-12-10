@@ -16,7 +16,7 @@ public class SeleniumFactory {
 
 	static {
 		System.setProperty(SELENIUM_CHROME_DRIVER_PATH,
-				System.getProperty(SELENIUM_CHROME_DRIVER_PATH, "src/main/resources/chromedriver.exe"));
+				System.getProperty(SELENIUM_CHROME_DRIVER_PATH, "instabot-core/src/main/resources/chromedriver.exe"));
 
 		System.setProperty(SELENIUM_DEBUG_MODE,
 				System.getProperty(SELENIUM_DEBUG_MODE, "false"));
