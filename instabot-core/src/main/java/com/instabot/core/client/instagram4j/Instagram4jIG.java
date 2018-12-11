@@ -7,9 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-import static com.instabot.core.config.IGContants.IG_PASSWORD;
-import static com.instabot.core.config.IGContants.IG_USERNAME;
-
 public final class Instagram4jIG {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Instagram4jIG.class);
@@ -20,24 +17,22 @@ public final class Instagram4jIG {
 
 	}
 
-	public static Instagram4j getClient() {
+	public static Instagram4j getClient(String username, String password) {
 
 		if (userClient != null) {
 			LOGGER.debug("Returning already logged Instagram4j client..");
 			return userClient;
 		}
 
-		LOGGER.info("Initializing user {}...", IG_USERNAME);
-
 		userClient = Instagram4j.builder()
-				.username(IG_USERNAME)
-				.password(IG_PASSWORD)
+				.username(username)
+				.password(password)
 				.build();
 
 		userClient.setup();
 
 		LOGGER.info("Login Instagram4j client with username: {}, password {}",
-				IG_USERNAME, StringUtils.repeat("*", IG_PASSWORD.length()));
+				username, StringUtils.repeat("*", password.length()));
 
 		try {
 			userClient.login();

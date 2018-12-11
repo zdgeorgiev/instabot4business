@@ -1,13 +1,12 @@
 package com.instabot.core.request;
 
-import com.instabot.core.client.instagram4j.Instagram4jIG;
 import com.instabot.core.collections.UserCommentsCollection;
 import com.instabot.core.filter.CommentFilter;
 import com.instabot.core.filter.IGFilter;
 import com.instabot.core.filter.UserFilter;
+import com.instabot.core.model.IGUser;
 import com.instabot.core.strategy.UserSortingStrategy;
 import org.apache.commons.lang3.StringUtils;
-import org.brunocvcunha.instagram4j.Instagram4j;
 import org.brunocvcunha.instagram4j.requests.InstagramGetMediaCommentsRequest;
 import org.brunocvcunha.instagram4j.requests.payload.InstagramGetMediaCommentsResult;
 import org.brunocvcunha.instagram4j.requests.payload.InstagramUser;
@@ -28,14 +27,14 @@ public class IGCommentsReq {
 	private static final int MAX_USER_COMMENTS_ON_PHOTO = 5;
 
 	private UserCommentsCollection userComments;
-	private Instagram4j userClient;
+	private IGUser user;
 	private List<IGFilter> filters;
 	private String mediaId;
 	private String nextMediaPage;
 
-	public IGCommentsReq(String mediaCode) {
+	public IGCommentsReq(IGUser user, String mediaCode) {
+		this.user = user;
 		this.userComments = new UserCommentsCollection();
-		this.userClient = Instagram4jIG.getClient();
 		this.mediaId = InstagramCodeUtil.fromCode(mediaCode) + "";
 	}
 
@@ -67,7 +66,7 @@ public class IGCommentsReq {
 		try {
 			while (true) {
 				InstagramGetMediaCommentsResult commentsResult =
-						userClient.sendRequest(new InstagramGetMediaCommentsRequest(mediaId, nextMediaPage));
+						user.getInstagram4jIGClient().sendRequest(new InstagramGetMediaCommentsRequest(mediaId, nextMediaPage));
 
 				commentsResult.getComments()
 						.forEach(comment -> {

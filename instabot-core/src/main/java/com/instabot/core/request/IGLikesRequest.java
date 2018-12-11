@@ -1,7 +1,6 @@
 package com.instabot.core.request;
 
-import com.instabot.core.client.instagram4j.Instagram4jIG;
-import org.brunocvcunha.instagram4j.Instagram4j;
+import com.instabot.core.model.IGUser;
 import org.brunocvcunha.instagram4j.requests.InstagramLikeRequest;
 import org.brunocvcunha.instagram4j.util.InstagramCodeUtil;
 import org.slf4j.Logger;
@@ -15,15 +14,16 @@ public class IGLikesRequest {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IGLikesRequest.class);
 
-	private Instagram4j instagram4jClient;
+	private IGUser user;
 
-	public IGLikesRequest() {
-		this.instagram4jClient = Instagram4jIG.getClient();
+	public IGLikesRequest(IGUser user) {
+		this.user = user;
 	}
 
 	public void likePhoto(String mediaId) {
 		try {
-			instagram4jClient.sendRequest(new InstagramLikeRequest(InstagramCodeUtil.fromCode(mediaId)));
+			user.getInstagram4jIGClient().sendRequest(new InstagramLikeRequest(InstagramCodeUtil.fromCode(mediaId)));
+			LOGGER.info("{} user liked photo {}", user.getUserType(), mediaId);
 		} catch (IOException e) {
 			LOGGER.error("Cannot like photo: {}", mediaId, e);
 		}

@@ -1,7 +1,6 @@
 package com.instabot.core.request;
 
-import com.instabot.core.client.instagram4j.Instagram4jIG;
-import org.brunocvcunha.instagram4j.Instagram4j;
+import com.instabot.core.model.IGUser;
 import org.brunocvcunha.instagram4j.requests.InstagramFollowRequest;
 import org.brunocvcunha.instagram4j.requests.InstagramSearchUsernameRequest;
 import org.slf4j.Logger;
@@ -15,10 +14,10 @@ public class IGFollowersReq {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IGFollowersReq.class);
 
-	private Instagram4j userClient;
+	private IGUser user;
 
-	public IGFollowersReq() {
-		this.userClient = Instagram4jIG.getClient();
+	public IGFollowersReq(IGUser user) {
+		this.user = user;
 	}
 
 	public Collection<String> getFollowers(String username) {
@@ -29,14 +28,14 @@ public class IGFollowersReq {
 
 		long userId;
 		try {
-			userId = userClient.sendRequest(new InstagramSearchUsernameRequest(username)).getUser().pk;
+			userId = user.getInstagram4jIGClient().sendRequest(new InstagramSearchUsernameRequest(username)).getUser().pk;
 		} catch (IOException e) {
 			LOGGER.error("Cannot convert user {} to code", username, e);
 			throw new RuntimeException();
 		}
 
 		try {
-			userClient.sendRequest(new InstagramFollowRequest(userId));
+			user.getInstagram4jIGClient().sendRequest(new InstagramFollowRequest(userId));
 			LOGGER.info("User: {} followed..", username);
 		} catch (IOException e) {
 			LOGGER.error("Cannot follow user {}", username, e);

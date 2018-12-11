@@ -1,6 +1,7 @@
 package com.instabot.core;
 
 import com.instabot.core.filter.IGFilter;
+import com.instabot.core.model.IGUser;
 import com.instabot.core.request.IGCommentsReq;
 import com.instabot.core.request.IGFollowersReq;
 import com.instabot.core.request.IGLikesRequest;
@@ -30,52 +31,44 @@ public final class IGClient {
 
 	/////////////////////////
 
-	public static List<String> getUsersWhoLiked(String mediaId) {
-		return getUsersWhoLiked(mediaId, MAX_USERS_WHO_LIKED_PHOTO_COUNT);
+	public static List<String> getUsersWhoLiked(IGUser user, String mediaId) {
+		return getUsersWhoLiked(user, mediaId, MAX_USERS_WHO_LIKED_PHOTO_COUNT);
 	}
 
-	public static List<String> getUsersWhoLiked(String mediaId, int maxUsersCount) {
-		return new IGLikesRequest().getUsersWhoLiked(mediaId, maxUsersCount);
-	}
-
-	/////////////////////////
-
-	public static void likePhotos(List<String> mediaIds) {
-		mediaIds.forEach(IGClient::likePhoto);
-	}
-
-	public static void likePhoto(String mediaId) {
-		new IGLikesRequest().likePhoto(mediaId);
+	public static List<String> getUsersWhoLiked(IGUser user, String mediaId, int maxUsersCount) {
+		return new IGLikesRequest(user).getUsersWhoLiked(mediaId, maxUsersCount);
 	}
 
 	/////////////////////////
 
-	public static List<String> getUserFollowers(String username) {
+	/////////////////////////
+
+	public static List<String> getUserFollowers(IGUser user, String username) {
 		LOGGER.info("Collecting followers for user: {}", username);
-		List<String> followers = new ArrayList<>(new IGFollowersReq().getFollowers(username));
+		List<String> followers = new ArrayList<>(new IGFollowersReq(user).getFollowers(username));
 		LOGGER.info("{} followers were collected", followers.size());
 		return followers;
 	}
 
 	/////////////////////////
 
-	public static void followUsers(List<String> usernames) {
-		usernames.forEach(IGClient::followUser);
+	public static void followUsers(IGUser user, List<String> usernames) {
+		usernames.forEach(username -> followUser(user, username));
 	}
 
-	public static void followUser(String username) {
-		new IGFollowersReq().followUser(username);
+	public static void followUser(IGUser user, String username) {
+		new IGFollowersReq(user).followUser(username);
 	}
 
 	/////////////////////////
 
-	public static List<String> getUserLastPhotoIds(String username) {
-		return new ArrayList<>(new IGPhotosReq().getMediaIds(username, MAX_USER_PHOTOS_COUNT));
+	public static List<String> getUserLastPhotoIds(IGUser user, String username) {
+		return getUserLastPhotoIds(user, username, MAX_USER_PHOTOS_COUNT);
 	}
 
-	public static List<String> getUserLastPhotoIds(String username, int lastPhotosCount) {
+	public static List<String> getUserLastPhotoIds(IGUser user, String username, int lastPhotosCount) {
 		LOGGER.info("Getting last {} photos for user: {}", lastPhotosCount, username);
-		List<String> mediaIds = new ArrayList<>(new IGPhotosReq().getMediaIds(username, lastPhotosCount));
+		List<String> mediaIds = new ArrayList<>(new IGPhotosReq(user).getMediaIds(username, lastPhotosCount));
 		LOGGER.info("{} photo ids were collected", mediaIds.size());
 		return mediaIds;
 	}
@@ -83,24 +76,28 @@ public final class IGClient {
 	/////////////////////////
 
 	public static List<String> getBestUsersFromComments(
+			IGUser user,
 			List<String> mediaIds) {
-		return getBestUsersFromComments(mediaIds, null);
+		return getBestUsersFromComments(user, mediaIds, null);
 	}
 
 	public static List<String> getBestUsersFromComments(
+			IGUser user,
 			List<String> mediaIds,
 			List<Class<? extends IGFilter>> filters) {
-		return getBestUsersFromComments(mediaIds, filters, NoSortingStrategy.class);
+		return getBestUsersFromComments(user, mediaIds, filters, NoSortingStrategy.class);
 	}
 
 	public static List<String> getBestUsersFromComments(
+			IGUser user,
 			List<String> mediaIds,
 			List<Class<? extends IGFilter>> filters,
 			Class<? extends UserSortingStrategy> userSortingStrategy) {
-		return getBestUsersFromComments(mediaIds, filters, userSortingStrategy, MAX_BEST_USERS_COUNT);
+		return getBestUsersFromComments(user, mediaIds, filters, userSortingStrategy, MAX_BEST_USERS_COUNT);
 	}
 
 	public static List<String> getBestUsersFromComments(
+			IGUser user,
 			List<String> mediaIds,
 			List<Class<? extends IGFilter>> filters,
 			Class<? extends UserSortingStrategy> userSortingStrategy,
@@ -110,7 +107,7 @@ public final class IGClient {
 
 		Map<String, Integer> bestUsersScore =
 				mediaIds.stream()
-						.map(media -> new IGCommentsReq(media)
+						.map(media -> new IGCommentsReq(user, media)
 								.applyFilters(filters)
 								.applyUserSortingStrategy(userSortingStrategy)
 								.execute())

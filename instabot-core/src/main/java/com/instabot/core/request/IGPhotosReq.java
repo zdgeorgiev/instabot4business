@@ -1,8 +1,7 @@
 package com.instabot.core.request;
 
-import com.instabot.core.client.selenium.SeleniumIG;
+import com.instabot.core.model.IGUser;
 import org.openqa.selenium.By;
-import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,23 +16,23 @@ public class IGPhotosReq {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IGPhotosReq.class);
 
-	private RemoteWebDriver seleniumClient;
+	private IGUser user;
 
-	public IGPhotosReq() {
-		this.seleniumClient = SeleniumIG.getClient();
+	public IGPhotosReq(IGUser user) {
+		this.user = user;
 	}
 
 	public Collection<String> getMediaIds(String username, int lastPhotosCount) {
 
 		Set<String> mediaUrls = new HashSet<>();
 
-		seleniumClient.get(String.format(IG_PROFILE_URL, username));
+		user.getSeleniumIGClient().get(String.format(IG_PROFILE_URL, username));
 
 		while (mediaUrls.size() < lastPhotosCount) {
 
 			int previousIterationPhotosCount = mediaUrls.size();
 
-			mediaUrls.addAll(seleniumClient.findElements(By.className("_bz0w")).stream()
+			mediaUrls.addAll(user.getSeleniumIGClient().findElements(By.className("_bz0w")).stream()
 					.map(pic -> pic.findElement(By.cssSelector("a")).getAttribute("href"))
 					.collect(Collectors.toList()));
 
@@ -42,7 +41,7 @@ public class IGPhotosReq {
 				break;
 
 			// scroll down
-			seleniumClient.executeScript("window.scrollTo(0, document.body.scrollHeight)");
+			user.getSeleniumIGClient().executeScript("window.scrollTo(0, document.body.scrollHeight)");
 
 			try {
 				Thread.sleep(2000);
