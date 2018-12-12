@@ -2,7 +2,7 @@ package com.instabot.core;
 
 import com.instabot.core.filter.IGFilter;
 import com.instabot.core.filter.NoPhotoUserFilter;
-import com.instabot.core.filter.PublicProfileFilter;
+import com.instabot.core.filter.PrivateProfileFilter;
 import com.instabot.core.filter.SpamCommentFilter;
 import com.instabot.core.model.FakeIGUser;
 import com.instabot.core.model.IGUser;
@@ -23,7 +23,7 @@ public class Main {
 
 		List<Class<? extends IGFilter>> filters = Arrays.asList(
 				NoPhotoUserFilter.class,
-				PublicProfileFilter.class,
+				PrivateProfileFilter.class,
 				SpamCommentFilter.class
 		);
 

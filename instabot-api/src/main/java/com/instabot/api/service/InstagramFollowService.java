@@ -3,7 +3,7 @@ package com.instabot.api.service;
 import com.instabot.api.pool.UsersPoolFactory;
 import com.instabot.core.filter.IGFilter;
 import com.instabot.core.filter.NoPhotoUserFilter;
-import com.instabot.core.filter.PublicProfileFilter;
+import com.instabot.core.filter.PrivateProfileFilter;
 import com.instabot.core.filter.SpamCommentFilter;
 import com.instabot.core.model.IGUser;
 import com.instabot.core.model.UserType;
@@ -41,20 +41,20 @@ public class InstagramFollowService {
 
 		List<Class<? extends IGFilter>> filters = Arrays.asList(
 				NoPhotoUserFilter.class,
-				PublicProfileFilter.class,
+				PrivateProfileFilter.class,
 				SpamCommentFilter.class
 		);
 
 		Map<String, Integer> bestUsers = findBestUsers(userSortingStrategy, mediaIds, filters);
 		List<String> bestUsersSorted = sortBestUsers(bestUsers, topUsersCount);
 
-		LOGGER.info("Starting to following the top users..");
+		LOGGER.info("Starting to following the top followers..");
 		bestUsersSorted.forEach(this::follow);
 	}
 
 	private Map<String, Integer> findBestUsers(Class<? extends UserSortingStrategy> userSortingStrategy, List<String> mediaIds,
 			List<Class<? extends IGFilter>> filters) {
-		LOGGER.info("Finding top users from the comments");
+		LOGGER.info("Finding top followers from the comments");
 		return mediaIds.stream()
 				.map(mediaId -> new IGCommentsReq(fakeIGUser)
 						.applyFilters(filters)
@@ -70,7 +70,7 @@ public class InstagramFollowService {
 	}
 
 	private List<String> sortBestUsers(Map<String, Integer> bestUsersScore, int bestUsersCount) {
-		LOGGER.info("Sorting top users list..");
+		LOGGER.info("Sorting top followers list..");
 		return bestUsersScore.entrySet().stream()
 				.sorted((Map.Entry.<String, Integer>comparingByValue().reversed()))
 				.limit(bestUsersCount)
