@@ -7,20 +7,12 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.instabot.core.config.SeleniumConstants.SELENIUM_CHROME_DRIVER_PATH;
-import static com.instabot.core.config.SeleniumConstants.SELENIUM_DEBUG_MODE;
-
 public class SeleniumFactory {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SeleniumFactory.class);
 
-	static {
-		System.setProperty(SELENIUM_CHROME_DRIVER_PATH,
-				System.getProperty(SELENIUM_CHROME_DRIVER_PATH, "instabot-core/src/main/resources/chromedriver.exe"));
-
-		System.setProperty(SELENIUM_DEBUG_MODE,
-				System.getProperty(SELENIUM_DEBUG_MODE, "false"));
-	}
+	public static final String SELENIUM_DEBUG_MODE = System.setProperty("ig.selenium.debug",
+			System.getProperty("ig.selenium.debug", "false"));
 
 	private static RemoteWebDriver driver;
 

@@ -18,12 +18,12 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.instabot.api.config.ConfigurationProperties.MAX_PHOTOS_FROM_TIMELINE_COUNT;
+
 @Service
 public class InstagramFollowService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(InstagramFollowService.class);
-
-	private static final int MAX_PHOTOS_FROM_TIMELINE_COUNT = 20;
 
 	private IGUser mainIGUser = UsersPoolFactory.getUser(UserType.MAIN);
 	private IGUser fakeIGUser = UsersPoolFactory.getUser(UserType.FAKE);

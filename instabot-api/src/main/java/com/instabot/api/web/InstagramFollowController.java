@@ -15,8 +15,6 @@ public class InstagramFollowController {
 	@Autowired
 	private InstagramFollowService instagramFollowService;
 
-	private static final String FOLLOWERS_COUNT = "100";
-
 	@ResponseBody
 	@RequestMapping(method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
@@ -39,7 +37,7 @@ public class InstagramFollowController {
 			@RequestParam UserSortingStrategyType userSortingStrategy,
 
 			@ApiParam(name = "topFollowersCount", value = "Top followers count")
-			@RequestParam(value = "topFollowersCount", required = false, defaultValue = FOLLOWERS_COUNT) Integer bestUsersCount) {
+			@RequestParam(value = "topFollowersCount", required = false, defaultValue = "100") Integer bestUsersCount) {
 
 		instagramFollowService.followTopFollowers(targetUsername, userSortingStrategy.getStrategyClass(), bestUsersCount);
 	}
