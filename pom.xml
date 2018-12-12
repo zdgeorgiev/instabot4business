@@ -9,6 +9,8 @@
   <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
+  <name>Instabot Parent</name>
+
   <modules>
 	<module>instabot-api</module>
 	<module>instabot-core</module>

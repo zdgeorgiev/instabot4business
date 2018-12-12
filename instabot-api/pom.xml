@@ -16,7 +16,6 @@
   <packaging>jar</packaging>
 
   <name>Instabot API</name>
-  <description>Instagram API is REST API that getting followers by specific conditions.</description>
 
   <dependencies>
 

@@ -27,11 +27,11 @@ public abstract class IGUser {
 
 	public void login() {
 		LOGGER.info("Login {} user {}", this.userType, this.username);
-		initDriver(Driver.SELENIUM);
-		initDriver(Driver.INSTAGRAM4J);
+		initDriver(DriverType.SELENIUM);
+		initDriver(DriverType.INSTAGRAM4J);
 	}
 
-	private void initDriver(Driver driver) {
+	private void initDriver(DriverType driver) {
 		LOGGER.info("Initializing driver {} for user {}", driver, this.username);
 		try {
 			switch (driver) {

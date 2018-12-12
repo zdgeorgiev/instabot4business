@@ -2,7 +2,6 @@ package com.instabot.core;
 
 import com.instabot.core.filter.IGFilter;
 import com.instabot.core.model.IGUser;
-import com.instabot.core.request.IGCommentsReq;
 import com.instabot.core.request.IGFollowersReq;
 import com.instabot.core.request.IGLikesRequest;
 import com.instabot.core.request.IGPhotosReq;
@@ -12,10 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public final class IGClient {
 
@@ -103,28 +99,30 @@ public final class IGClient {
 			Class<? extends UserSortingStrategy> userSortingStrategy,
 			int bestUsersCount) {
 
-		LOGGER.info("Creating a list of top {} users from the comments", bestUsersCount);
+//		LOGGER.info("Creating a list of top {} users from the comments", bestUsersCount);
+		//
+		//		Map<String, Integer> bestUsersScore =
+		//				mediaIds.stream()
+		//						.map(media -> new IGCommentsReq(user, media)
+		//								.applyFilters(filters)
+		//								.applyUserSortingStrategy(userSortingStrategy)
+		//								.getComments())
+		//						.reduce((a1, a2) -> {
+		//									// If same user is present in couple of different medias
+		//									// then combine the values of the comments
+		//									a2.forEach((k, v) -> a1.merge(k, v, (v1, v2) -> v1 + v2));
+		//									return a1;
+		//								}
+		//						).orElse(Collections.emptyMap());
+		//
+		//		LOGGER.info("Sorting best users list..");
+		//
+		//		return bestUsersScore.entrySet().stream()
+		//				.sorted((Map.Entry.<String, Integer>comparingByValue().reversed()))
+		//				.limit(bestUsersCount)
+		//				.collect(Collectors.toList()).stream()
+		//				.map(Map.Entry::getKey).collect(Collectors.toList());
 
-		Map<String, Integer> bestUsersScore =
-				mediaIds.stream()
-						.map(media -> new IGCommentsReq(user, media)
-								.applyFilters(filters)
-								.applyUserSortingStrategy(userSortingStrategy)
-								.execute())
-						.reduce((a1, a2) -> {
-									// If same user is present in couple of different medias
-									// then combine the values of the comments
-									a2.forEach((k, v) -> a1.merge(k, v, (v1, v2) -> v1 + v2));
-									return a1;
-								}
-						).orElse(Collections.emptyMap());
-
-		LOGGER.info("Sorting best users list..");
-
-		return bestUsersScore.entrySet().stream()
-				.sorted((Map.Entry.<String, Integer>comparingByValue().reversed()))
-				.limit(bestUsersCount)
-				.collect(Collectors.toList()).stream()
-				.map(Map.Entry::getKey).collect(Collectors.toList());
+		return null;
 	}
 }

@@ -29,21 +29,20 @@ public class IGCommentsReq {
 	private UserCommentsCollection userComments;
 	private IGUser user;
 	private List<IGFilter> filters;
-	private String mediaId;
 	private String nextMediaPage;
 
-	public IGCommentsReq(IGUser user, String mediaCode) {
+	public IGCommentsReq(IGUser user) {
 		this.user = user;
 		this.userComments = new UserCommentsCollection();
-		this.mediaId = InstagramCodeUtil.fromCode(mediaCode) + "";
 	}
 
-	public Map<String, Integer> execute() {
+	public Map<String, Integer> getComments(String mediaId) {
 
-		LOGGER.info("Starting to collect comments for media: {}", mediaId);
+		String mediaCode = InstagramCodeUtil.fromCode(mediaId) + "";
+		LOGGER.info("Starting to collect comments for media: {}", mediaCode);
 
 		try {
-			executeRequest();
+			executeRequest(mediaCode);
 		} catch (InterruptedException e) {
 			LOGGER.error("Thread cannot sleep", e);
 		}
@@ -54,19 +53,14 @@ public class IGCommentsReq {
 		return userComments.normalize();
 	}
 
-	public final IGCommentsReq applyFilters(List<Class<? extends IGFilter>> filters) {
-		this.filters = initializeFilters(filters);
-		return this;
-	}
-
-	private void executeRequest() throws InterruptedException {
+	private void executeRequest(String mediaCode) throws InterruptedException {
 
 		LOGGER.info("Collected {} comments", userComments.size());
 
 		try {
 			while (true) {
 				InstagramGetMediaCommentsResult commentsResult =
-						user.getInstagram4jIGClient().sendRequest(new InstagramGetMediaCommentsRequest(mediaId, nextMediaPage));
+						user.getInstagram4jIGClient().sendRequest(new InstagramGetMediaCommentsRequest(mediaCode, nextMediaPage));
 
 				commentsResult.getComments()
 						.forEach(comment -> {
@@ -96,8 +90,13 @@ public class IGCommentsReq {
 		} catch (Exception e) {
 			LOGGER.info("Sleeping for {}s because of too much requests.", TIMEOUT_SLEEP_SECONDS, e);
 			Thread.sleep(TIMEOUT_SLEEP_SECONDS * 1000);
-			executeRequest();
+			executeRequest(mediaCode);
 		}
+	}
+
+	public final IGCommentsReq applyFilters(List<Class<? extends IGFilter>> filters) {
+		this.filters = initializeFilters(filters);
+		return this;
 	}
 
 	private boolean isCommentValid(String comment) {

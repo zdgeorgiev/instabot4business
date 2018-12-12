@@ -1,6 +1,6 @@
 package com.instabot.core.model;
 
-public enum Driver {
+public enum DriverType {
 	SELENIUM,
 	INSTAGRAM4J
 }
