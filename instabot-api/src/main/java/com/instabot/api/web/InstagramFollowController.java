@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping(value = "/follow")
 public class InstagramFollowController {
@@ -26,10 +28,10 @@ public class InstagramFollowController {
 	}
 
 	@ResponseBody
-	@RequestMapping(value = "/top", method = RequestMethod.POST)
+	@RequestMapping(value = "/top", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
-	@ApiOperation(value = "Follow top followers for a specific user.")
-	public void followTopFollowers(
+	@ApiOperation(value = "Get a list of top followers for a specific user that never have been followed.")
+	public List<String> getTopNotEverFollowedFollowers(
 			@ApiParam(name = "targetUsername", value = "Target is the user from who we want to get its top followers")
 			@RequestParam String targetUsername,
 
@@ -39,6 +41,7 @@ public class InstagramFollowController {
 			@ApiParam(name = "topFollowersCount", value = "Top followers count")
 			@RequestParam(value = "topFollowersCount", required = false, defaultValue = "100") Integer bestUsersCount) {
 
-		instagramFollowService.followTopFollowers(targetUsername, userSortingStrategy.getStrategyClass(), bestUsersCount);
+		return instagramFollowService
+				.getTopNotEverFollowedFollowers(targetUsername, userSortingStrategy.getStrategyClass(), bestUsersCount);
 	}
 }

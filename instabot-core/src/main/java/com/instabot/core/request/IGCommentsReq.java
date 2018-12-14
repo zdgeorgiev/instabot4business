@@ -55,8 +55,6 @@ public class IGCommentsReq {
 
 	private void executeRequest(String mediaCode) throws InterruptedException {
 
-		LOGGER.info("Collected {} comments", userComments.size());
-
 		try {
 			while (true) {
 				InstagramGetMediaCommentsResult commentsResult =

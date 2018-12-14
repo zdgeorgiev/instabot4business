@@ -32,7 +32,8 @@ public class InstagramFollowService {
 		new IGFollowersReq(mainIGUser).followUser(username);
 	}
 
-	public void followTopFollowers(String targetUsername, Class<? extends UserSortingStrategy> userSortingStrategy,
+	public List<String> getTopNotEverFollowedFollowers(String targetUsername,
+			Class<? extends UserSortingStrategy> userSortingStrategy,
 			int topUsersCount) {
 
 		LOGGER.info("Collecting last {} photos of user {}", MAX_PHOTOS_FROM_TIMELINE_COUNT, targetUsername);
@@ -45,14 +46,12 @@ public class InstagramFollowService {
 				SpamCommentFilter.class
 		);
 
-		Map<String, Integer> bestUsers = findBestUsers(userSortingStrategy, mediaIds, filters);
-		List<String> bestUsersSorted = sortBestUsers(bestUsers, topUsersCount);
-
-		LOGGER.info("Starting to following the top followers..");
-		bestUsersSorted.forEach(this::follow);
+		Map<String, Integer> bestUsers = findTopNotEverFollowedFollowers(userSortingStrategy, mediaIds, filters);
+		return sortTopFollowers(bestUsers, topUsersCount);
 	}
 
-	private Map<String, Integer> findBestUsers(Class<? extends UserSortingStrategy> userSortingStrategy, List<String> mediaIds,
+	private Map<String, Integer> findTopNotEverFollowedFollowers(Class<? extends UserSortingStrategy> userSortingStrategy,
+			List<String> mediaIds,
 			List<Class<? extends IGFilter>> filters) {
 		LOGGER.info("Finding top followers from the comments");
 		return mediaIds.stream()
@@ -69,11 +68,13 @@ public class InstagramFollowService {
 				).orElse(Collections.emptyMap());
 	}
 
-	private List<String> sortBestUsers(Map<String, Integer> bestUsersScore, int bestUsersCount) {
+	private List<String> sortTopFollowers(Map<String, Integer> topFollowersScore, int topFollowersCount) {
 		LOGGER.info("Sorting top followers list..");
-		return bestUsersScore.entrySet().stream()
+		return topFollowersScore.entrySet().stream()
+				// TODO: filter all users already followed at some time before
+				//				.filter(follower -> !userRepository.get(mainIGUser.getUsername()).getAllTimeFollowed().contains(follower.getKey()))
 				.sorted((Map.Entry.<String, Integer>comparingByValue().reversed()))
-				.limit(bestUsersCount)
+				.limit(topFollowersCount)
 				.collect(Collectors.toList()).stream()
 				.map(Map.Entry::getKey).collect(Collectors.toList());
 	}
