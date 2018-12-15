@@ -1,20 +1,33 @@
 package com.instabot.core.request;
 
+import com.instabot.core.config.IGContants;
 import com.instabot.core.model.IGUser;
 import org.openqa.selenium.By;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
-
-import static com.instabot.core.config.IGContants.IG_PROFILE_URL;
 
 public class IGPhotosReq {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IGPhotosReq.class);
+
+	public enum TARGET_TYPE {
+		USER(IGContants.IG_PROFILE_URL),
+		HASHTAG(IGContants.IG_HASHTAG_URL);
+
+		private String typeUrl;
+
+		TARGET_TYPE(String typeUrl) {
+			this.typeUrl = typeUrl;
+		}
+
+		public String getTypeUrl() {
+			return typeUrl;
+		}
+	}
 
 	private IGUser user;
 
@@ -22,13 +35,13 @@ public class IGPhotosReq {
 		this.user = user;
 	}
 
-	public Collection<String> getMediaIds(String username, int lastPhotosCount) {
+	public List<String> getPhotosFor(TARGET_TYPE targetType, String target, int limit) {
 
-		Set<String> mediaUrls = new HashSet<>();
+		List<String> mediaUrls = new ArrayList<>();
 
-		user.getSeleniumIGClient().get(String.format(IG_PROFILE_URL, username));
+		user.getSeleniumIGClient().get(String.format(targetType.getTypeUrl(), target));
 
-		while (mediaUrls.size() < lastPhotosCount) {
+		while (mediaUrls.size() < limit) {
 
 			int previousIterationPhotosCount = mediaUrls.size();
 
@@ -52,7 +65,7 @@ public class IGPhotosReq {
 
 		return mediaUrls.stream()
 				.map(x -> x.substring(x.indexOf("p/") + 2, x.lastIndexOf("/")))
-				.limit(lastPhotosCount)
+				.limit(limit)
 				.collect(Collectors.toList());
 	}
 }

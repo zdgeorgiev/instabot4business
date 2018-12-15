@@ -38,7 +38,7 @@ public class InstagramFollowService {
 
 		LOGGER.info("Collecting last {} photos of user {}", MAX_PHOTOS_FROM_TIMELINE_COUNT, targetUsername);
 		List<String> mediaIds = new ArrayList<>(new IGPhotosReq(fakeIGUser)
-				.getMediaIds(targetUsername, MAX_PHOTOS_FROM_TIMELINE_COUNT));
+				.getPhotosFor(IGPhotosReq.TARGET_TYPE.USER, targetUsername, MAX_PHOTOS_FROM_TIMELINE_COUNT));
 
 		List<Class<? extends IGFilter>> filters = Arrays.asList(
 				NoPhotoUserFilter.class,
