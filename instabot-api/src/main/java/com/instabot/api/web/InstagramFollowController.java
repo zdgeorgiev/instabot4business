@@ -8,8 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping(value = "/follow")
 public class InstagramFollowController {
@@ -28,20 +26,15 @@ public class InstagramFollowController {
 	}
 
 	@ResponseBody
-	@RequestMapping(value = "/top", method = RequestMethod.GET)
-	@ResponseStatus(HttpStatus.OK)
-	@ApiOperation(value = "Get a list of top followers for a specific user that never have been followed.")
-	public List<String> getTopNotEverFollowedFollowers(
-			@ApiParam(name = "targetUsername", value = "Target is the user from who we want to get its top followers")
-			@RequestParam String targetUsername,
+	@RequestMapping(value = "/addFollowers", method = RequestMethod.POST)
+	@ResponseStatus(HttpStatus.CREATED)
+	@ApiOperation(value = "Add top followers for a user in the following queue for the current user")
+	public void addTopTargetFollowers(
+			@ApiParam(name = "username", value = "Target username from which we want to get its top followers")
+			@RequestParam String username,
 
 			@ApiParam(name = "userSortingStrategy", value = "Strategy that define who is top follower")
-			@RequestParam UserSortingStrategyType userSortingStrategy,
-
-			@ApiParam(name = "topFollowersCount", value = "Top followers count")
-			@RequestParam(value = "topFollowersCount", required = false, defaultValue = "100") Integer bestUsersCount) {
-
-		return instagramFollowService
-				.getTopNotEverFollowedFollowers(targetUsername, userSortingStrategy.getStrategyClass(), bestUsersCount);
+			@RequestParam UserSortingStrategyType userSortingStrategy) {
+		instagramFollowService.addTopTargetFollowers(username, userSortingStrategy);
 	}
 }

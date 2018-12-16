@@ -11,4 +11,8 @@ public class InstagramLikeService {
 	public void likePhoto(String mediaId) {
 		new IGLikesRequest(UsersPoolFactory.getUser(UserType.MAIN)).likePhoto(mediaId);
 	}
+
+	public void addTopTargetLikers(String username) {
+		//TODO: implement function to return top likers for username
+	}
 }

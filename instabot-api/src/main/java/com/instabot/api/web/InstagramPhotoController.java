@@ -21,11 +21,13 @@ public class InstagramPhotoController {
 	@RequestMapping(method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ApiOperation(value = "Get photos for specific type.")
-	public List<String> getPhotosForHashtag(
+	public List<String> getPhotosForTargetType(
 			@ApiParam(name = "target", value = "Target name")
 			@RequestParam String target,
+
 			@ApiParam(name = "targetType", value = "Photo for user or hashtag")
 			@RequestParam(name = "targetType", defaultValue = "USER") TARGET_TYPE targetType,
+
 			@ApiParam(name = "limit", value = "max photos to return")
 			@RequestParam(name = "limit", required = false, defaultValue = "100") Integer limit) {
 		return instagramPhotoService.getPhotos(targetType, target, limit);

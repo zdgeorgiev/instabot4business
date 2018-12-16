@@ -21,6 +21,7 @@ public class IGFollowersReq {
 	}
 
 	public Collection<String> getFollowers(String username) {
+		// TODO: implement function to get list of followers for a user
 		throw new NotImplementedException();
 	}
 

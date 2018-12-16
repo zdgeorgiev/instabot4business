@@ -23,4 +23,14 @@ public class InstagramLikeController {
 			@RequestParam String mediaId) {
 		instagramLikeService.likePhoto(mediaId);
 	}
+
+	@ResponseBody
+	@RequestMapping(value = "/addLikers", method = RequestMethod.POST)
+	@ResponseStatus(HttpStatus.CREATED)
+	@ApiOperation(value = "Add top likers for a user in the liking queue for the current user")
+	public void addTopTargetLikers(
+			@ApiParam(name = "username", value = "Target username from which we want to get its top likers")
+			@RequestParam String username) {
+		instagramLikeService.addTopTargetLikers(username);
+	}
 }
