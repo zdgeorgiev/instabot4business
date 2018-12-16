@@ -126,7 +126,7 @@ public class InstagramBotService {
 		public void runTask(Execution execution) {
 			execution.execute();
 			double secondsToSleep = returnSleepInSeconds(tasksCount);
-			LOGGER.info("Sleeping for {} minutes", String.format("%.2g%n", secondsToSleep / 60));
+			LOGGER.info("Sleeping for {} minutes", String.format("%.2g", secondsToSleep / 60));
 
 			try {
 				Thread.sleep((long) secondsToSleep * 1000);
@@ -136,8 +136,8 @@ public class InstagramBotService {
 		}
 
 		private long returnSleepInSeconds(int taskCount) {
-			double minTimeToSleepInSeconds = (MIN_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH / taskCount) * 60 * 60;
-			double maxTimeToSleepInSeconds = (MAX_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH / taskCount) * 60 * 60;
+			double minTimeToSleepInSeconds = ((double)MIN_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH / taskCount) * 60 * 60;
+			double maxTimeToSleepInSeconds = ((double)MAX_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH / taskCount) * 60 * 60;
 			return (long) Math
 					.ceil(minTimeToSleepInSeconds + (Math.random() * (maxTimeToSleepInSeconds - minTimeToSleepInSeconds)));
 		}

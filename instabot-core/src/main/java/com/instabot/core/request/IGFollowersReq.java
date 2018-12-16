@@ -37,7 +37,7 @@ public class IGFollowersReq {
 
 		try {
 			user.getInstagram4jIGClient().sendRequest(new InstagramFollowRequest(userId));
-			LOGGER.info("User: {} followed..", username);
+			LOGGER.info("{} user:{} followed {}..", user.getUserType(), user.getUsername(), username);
 		} catch (IOException e) {
 			LOGGER.error("Cannot follow user {}", username, e);
 		}

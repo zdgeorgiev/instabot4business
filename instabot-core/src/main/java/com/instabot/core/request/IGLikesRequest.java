@@ -23,7 +23,7 @@ public class IGLikesRequest {
 	public void likePhoto(String mediaId) {
 		try {
 			user.getInstagram4jIGClient().sendRequest(new InstagramLikeRequest(InstagramCodeUtil.fromCode(mediaId)));
-			LOGGER.info("{} user liked photo {}", user.getUserType(), mediaId);
+			LOGGER.info("{} user:{} liked photo /p/{}", user.getUserType(), user.getUsername(), mediaId);
 		} catch (IOException e) {
 			LOGGER.error("Cannot like photo: {}", mediaId, e);
 		}
