@@ -146,7 +146,7 @@ public class InstagramBotService {
 	public void addPhotosFromHashtag() {
 		User DBUser = userRepository.findByUsername(mainUsername);
 		Set<String> hashtags = DBUser.getHashtags();
-		LOGGER.info("Starting to process hashtags [{}]", hashtags);
+		LOGGER.info("Starting to process hashtags {}", hashtags);
 
 		for (String hashtag : hashtags) {
 			List<String> currentHashtagPhotos =
