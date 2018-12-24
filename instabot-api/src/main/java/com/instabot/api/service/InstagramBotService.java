@@ -71,13 +71,12 @@ public class InstagramBotService {
 		DBUser.getToFollow().removeAll(usersToFollow);
 		userRepository.saveAndFlush(DBUser);
 
-		for (String username : usersToFollow) {
-			new AutoSleepExecutor(MAX_FOLLOWS_PER_DAY).runTask(() -> {
-				LOGGER.info("Created follow request for user:{}..", username);
-				instagramFollowService.follow(username);
-				DBUser.getEverFollowed().add(new FollowedInfo(username));
-			});
-		}
+		new AutoSleepExecutor(usersToFollow, MAX_FOLLOWS_PER_DAY)
+				.runTask((username) -> {
+					LOGGER.info("Created follow request for user:{}..", username);
+					instagramFollowService.follow((String) username);
+					DBUser.getEverFollowed().add(new FollowedInfo((String) username));
+				});
 
 		userRepository.saveAndFlush(DBUser);
 		LOGGER.info("Following users is done for today.");
@@ -95,38 +94,41 @@ public class InstagramBotService {
 		DBUser.getToLike().removeAll(photosToLike);
 		userRepository.saveAndFlush(DBUser);
 
-		for (String photoId : photosToLike) {
-			new AutoSleepExecutor(MAX_LIKES_PER_DAY).runTask(() -> {
-				LOGGER.info("Created like request for photo:{}..", photoId);
-				instagramLikeService.likePhoto(photoId);
-			});
-		}
+		new AutoSleepExecutor(photosToLike, MAX_LIKES_PER_DAY)
+				.runTask((photoId) -> {
+					LOGGER.info("Created like request for photo:{}..", photoId);
+					instagramLikeService.likePhoto((String) photoId);
+				});
 
 		LOGGER.info("Liking photos is done for today.");
 	}
 
 	private interface Execution {
-		void execute();
+		void execute(Object element);
 	}
 
 	private class AutoSleepExecutor {
 
-		private int tasksCount;
+		private Collection<?> collection;
+		private int executionsLimit;
 
-		public AutoSleepExecutor(int task) {
-			this.tasksCount = task;
+		public AutoSleepExecutor(Collection<?> collection, int executionsLimit) {
+			this.collection = collection;
+			this.executionsLimit = executionsLimit;
 		}
 
 		public void runTask(Execution execution) {
-			execution.execute();
-			double secondsToSleep = returnSleepInSeconds(tasksCount);
-			LOGGER.info("Sleeping for {} minutes", String.format("%.2g", secondsToSleep / 60));
+			collection.forEach(element -> {
+				execution.execute(element);
+				double secondsToSleep = returnSleepInSeconds(executionsLimit);
+				LOGGER.info("Sleeping for {} minutes", String.format("%.2g", secondsToSleep / 60));
 
-			try {
-				Thread.sleep((long) secondsToSleep * 1000);
-			} catch (InterruptedException e) {
-				LOGGER.error("Cannot sleep executor thread", e);
-			}
+				try {
+					Thread.sleep((long) secondsToSleep * 1000);
+				} catch (InterruptedException e) {
+					LOGGER.error("Cannot sleep executor thread", e);
+				}
+			});
 		}
 
 		private long returnSleepInSeconds(int taskCount) {
