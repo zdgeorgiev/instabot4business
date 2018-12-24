@@ -71,11 +71,11 @@ public class InstagramBotService {
 		DBUser.getToFollow().removeAll(usersToFollow);
 		userRepository.saveAndFlush(DBUser);
 
-		new AutoSleepExecutor(usersToFollow, MAX_FOLLOWS_PER_DAY)
+		new AutoSleepExecutor<>(usersToFollow, MAX_FOLLOWS_PER_DAY)
 				.runTask((username) -> {
 					LOGGER.info("Created follow request for user:{}..", username);
-					instagramFollowService.follow((String) username);
-					DBUser.getEverFollowed().add(new FollowedInfo((String) username));
+					instagramFollowService.follow(username);
+					DBUser.getEverFollowed().add(new FollowedInfo(username));
 				});
 
 		userRepository.saveAndFlush(DBUser);
@@ -94,32 +94,32 @@ public class InstagramBotService {
 		DBUser.getToLike().removeAll(photosToLike);
 		userRepository.saveAndFlush(DBUser);
 
-		new AutoSleepExecutor(photosToLike, MAX_LIKES_PER_DAY)
+		new AutoSleepExecutor<>(photosToLike, MAX_LIKES_PER_DAY)
 				.runTask((photoId) -> {
 					LOGGER.info("Created like request for photo:{}..", photoId);
-					instagramLikeService.likePhoto((String) photoId);
+					instagramLikeService.likePhoto(photoId);
 				});
 
 		LOGGER.info("Liking photos is done for today.");
 	}
 
-	private interface Execution {
-		void execute(Object element);
+	private interface Executor<T> {
+		void execute(T element);
 	}
 
-	private class AutoSleepExecutor {
+	private class AutoSleepExecutor<T> {
 
-		private Collection<?> collection;
+		private Collection<T> collection;
 		private int executionsLimit;
 
-		public AutoSleepExecutor(Collection<?> collection, int executionsLimit) {
+		public AutoSleepExecutor(Collection<T> collection, int executionsLimit) {
 			this.collection = collection;
 			this.executionsLimit = executionsLimit;
 		}
 
-		public void runTask(Execution execution) {
+		public void runTask(Executor<T> executor) {
 			collection.forEach(element -> {
-				execution.execute(element);
+				executor.execute(element);
 				double secondsToSleep = returnSleepInSeconds(executionsLimit);
 				LOGGER.info("Sleeping for {} minutes", String.format("%.2g", secondsToSleep / 60));
 
@@ -132,8 +132,8 @@ public class InstagramBotService {
 		}
 
 		private long returnSleepInSeconds(int taskCount) {
-			double minTimeToSleepInSeconds = ((double) MIN_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH / taskCount) * 60 * 60;
-			double maxTimeToSleepInSeconds = ((double) MAX_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH / taskCount) * 60 * 60;
+			int minTimeToSleepInSeconds = (MIN_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH / taskCount) * 60 * 60;
+			int maxTimeToSleepInSeconds = (MAX_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH / taskCount) * 60 * 60;
 			return (long) Math
 					.ceil(minTimeToSleepInSeconds + (Math.random() * (maxTimeToSleepInSeconds - minTimeToSleepInSeconds)));
 		}
