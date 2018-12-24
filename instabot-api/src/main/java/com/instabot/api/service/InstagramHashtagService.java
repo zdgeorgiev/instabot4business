@@ -15,21 +15,21 @@ public class InstagramHashtagService {
 	@Autowired
 	private UserRepository userRepository;
 
-	private String mainUser = UsersPoolFactory.getUser(UserType.MAIN).getUsername();
+	private String mainUsername = UsersPoolFactory.getUser(UserType.MAIN).getUsername();
 
 	public void deleteHashtag(String hashtag) {
-		User DBUser = userRepository.findByUsername(mainUser);
+		User DBUser = userRepository.findByUsername(mainUsername);
 		DBUser.getHashtags().remove(hashtag);
 		userRepository.saveAndFlush(DBUser);
 	}
 
 	public void addHashtag(String hashtag) {
-		User DBUser = userRepository.findByUsername(mainUser);
+		User DBUser = userRepository.findByUsername(mainUsername);
 		DBUser.getHashtags().add(hashtag);
 		userRepository.saveAndFlush(DBUser);
 	}
 
 	public Set<String> getHashtags() {
-		return userRepository.findByUsername(mainUser).getHashtags();
+		return userRepository.findByUsername(mainUsername).getHashtags();
 	}
 }

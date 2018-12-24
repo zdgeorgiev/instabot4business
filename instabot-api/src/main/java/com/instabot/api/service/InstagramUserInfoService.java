@@ -12,13 +12,13 @@ public class InstagramUserInfoService {
 	@Autowired
 	private UserRepository userRepository;
 
-	private String mainUser = UsersPoolFactory.getUser(UserType.MAIN).getUsername();
+	private String mainIGUser = UsersPoolFactory.getUser(UserType.MAIN).getUsername();
 
 	public int getFollowingQueueSize() {
-		return userRepository.findByUsername(mainUser).getToFollow().size();
+		return userRepository.findByUsername(mainIGUser).getToFollow().size();
 	}
 
 	public int getLikeQueueSize() {
-		return userRepository.findByUsername(mainUser).getToLike().size();
+		return userRepository.findByUsername(mainIGUser).getToLike().size();
 	}
 }

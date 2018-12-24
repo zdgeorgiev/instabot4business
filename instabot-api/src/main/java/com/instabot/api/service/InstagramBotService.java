@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import javax.annotation.PostConstruct;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -53,12 +52,7 @@ public class InstagramBotService {
 	@Autowired
 	private UserRepository userRepository;
 
-	private String mainUsername;
-
-	@PostConstruct
-	public void initDBUser() {
-		this.mainUsername = mainIGUser.getUsername();
-	}
+	private String mainUsername = mainIGUser.getUsername();
 
 	public void cleanFollowingUsers() {
 		LOGGER.info("Cleaning following users..");
@@ -136,8 +130,8 @@ public class InstagramBotService {
 		}
 
 		private long returnSleepInSeconds(int taskCount) {
-			double minTimeToSleepInSeconds = ((double)MIN_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH / taskCount) * 60 * 60;
-			double maxTimeToSleepInSeconds = ((double)MAX_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH / taskCount) * 60 * 60;
+			double minTimeToSleepInSeconds = ((double) MIN_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH / taskCount) * 60 * 60;
+			double maxTimeToSleepInSeconds = ((double) MAX_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH / taskCount) * 60 * 60;
 			return (long) Math
 					.ceil(minTimeToSleepInSeconds + (Math.random() * (maxTimeToSleepInSeconds - minTimeToSleepInSeconds)));
 		}

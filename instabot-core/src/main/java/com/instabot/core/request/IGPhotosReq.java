@@ -3,16 +3,12 @@ package com.instabot.core.request;
 import com.instabot.core.config.IGContants;
 import com.instabot.core.model.IGUser;
 import org.openqa.selenium.By;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class IGPhotosReq {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(IGPhotosReq.class);
 
 	public enum TARGET_TYPE {
 		USER(IGContants.IG_PROFILE_URL),
@@ -35,7 +31,7 @@ public class IGPhotosReq {
 		this.user = user;
 	}
 
-	public List<String> getPhotosFor(TARGET_TYPE targetType, String target, int limit) {
+	public List<String> getPhotosFor(TARGET_TYPE targetType, String target, int limit) throws InterruptedException {
 
 		List<String> mediaUrls = new ArrayList<>();
 
@@ -56,11 +52,7 @@ public class IGPhotosReq {
 			// scroll down
 			user.getSeleniumIGClient().executeScript("window.scrollTo(0, document.body.scrollHeight)");
 
-			try {
-				Thread.sleep(2000);
-			} catch (InterruptedException e) {
-				LOGGER.error("Cannot sleep", e);
-			}
+			Thread.sleep(2000);
 		}
 
 		return mediaUrls.stream()

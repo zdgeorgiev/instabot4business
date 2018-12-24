@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -47,15 +47,16 @@ public class InstagramFollowService {
 	private IGUser mainIGUser = UsersPoolFactory.getUser(UserType.MAIN);
 	private IGUser fakeIGUser = UsersPoolFactory.getUser(UserType.FAKE);
 
-	private String mainUsername;
-
-	@PostConstruct
-	public void initDBUser() {
-		this.mainUsername = mainIGUser.getUsername();
-	}
+	private String mainUsername = mainIGUser.getUsername();
 
 	public void follow(String username) {
-		new IGFollowersReq(mainIGUser).followUser(username);
+		try {
+			new IGFollowersReq(mainIGUser).followUser(username);
+			LOGGER.info("{} user:{} followed {}..", mainIGUser.getUserType(), mainIGUser.getUsername(), username);
+		} catch (IOException e) {
+			LOGGER.error("Cannot follow user {}", username, e);
+			throw new RuntimeException(e);
+		}
 	}
 
 	public void addTopTargetFollowers(String username, UserSortingStrategyType userSortingStrategy) {
@@ -96,6 +97,7 @@ public class InstagramFollowService {
 						.applyFilters(filters)
 						.applyUserSortingStrategy(userSortingStrategy)
 						.getComments(mediaId))
+				//				.filter(user -> user) // TODO: dont include MAIN USER
 				.reduce((a1, a2) -> {
 							// If same user is present in couple of different medias
 							// then combine the values of the comments
