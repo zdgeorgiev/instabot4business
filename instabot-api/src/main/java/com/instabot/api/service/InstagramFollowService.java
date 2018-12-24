@@ -115,4 +115,8 @@ public class InstagramFollowService {
 				.collect(Collectors.toList()).stream()
 				.map(Map.Entry::getKey).collect(Collectors.toList());
 	}
+
+	public void unfollow(String username) throws Exception {
+
+	}
 }

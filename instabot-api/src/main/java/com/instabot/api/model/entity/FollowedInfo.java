@@ -23,13 +23,24 @@ public class FollowedInfo {
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "EET")
 	private LocalDateTime dateFollowed;
 
-	public FollowedInfo() {
-		this.dateFollowed = LocalDateTime.now();
+	@Column(name = "followStatus")
+	@Enumerated(EnumType.STRING)
+	private FollowStatus followStatus;
+
+	public enum FollowStatus {
+		FOLLOWING,
+		NOT_FOLLOWING
 	}
 
 	public FollowedInfo(String username) {
-		this();
+		this.dateFollowed = LocalDateTime.now();
 		this.username = username;
+		this.followStatus = FollowStatus.FOLLOWING;
+	}
+
+	public FollowedInfo(String username, FollowStatus followStatus) {
+		this(username);
+		this.followStatus = followStatus;
 	}
 
 	public String getUsername() {
@@ -46,6 +57,14 @@ public class FollowedInfo {
 
 	public void setDateFollowed(LocalDateTime dateFollowed) {
 		this.dateFollowed = dateFollowed;
+	}
+
+	public FollowStatus getFollowStatus() {
+		return followStatus;
+	}
+
+	public void setFollowStatus(FollowStatus followStatus) {
+		this.followStatus = followStatus;
 	}
 
 	@Override public boolean equals(Object o) {
