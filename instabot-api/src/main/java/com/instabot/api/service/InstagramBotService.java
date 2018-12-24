@@ -104,10 +104,12 @@ public class InstagramBotService {
 	}
 
 	private interface Executor<T> {
-		void execute(T element);
+		void execute(T element) throws Exception;
 	}
 
 	private class AutoSleepExecutor<T> {
+
+		private final Logger LOGGER = LoggerFactory.getLogger(AutoSleepExecutor.class);
 
 		private Collection<T> collection;
 		private int executionsLimit;
@@ -119,14 +121,21 @@ public class InstagramBotService {
 
 		public void runTask(Executor<T> executor) {
 			collection.forEach(element -> {
-				executor.execute(element);
+
+				try {
+					executor.execute(element);
+				} catch (Exception e) {
+					LOGGER.error("Failed to execute the operation from AutoSleepExecutor for element {} ,"
+							+ " but will continue with the other elements", element, e);
+				}
+
 				double secondsToSleep = returnSleepInSeconds(executionsLimit);
 				LOGGER.info("Sleeping for {} minutes", String.format("%.2g", secondsToSleep / 60));
 
 				try {
 					Thread.sleep((long) secondsToSleep * 1000);
 				} catch (InterruptedException e) {
-					LOGGER.error("Cannot sleep executor thread", e);
+					LOGGER.error("Cannot sleep AutoSleepExecutor thread", e);
 				}
 			});
 		}
