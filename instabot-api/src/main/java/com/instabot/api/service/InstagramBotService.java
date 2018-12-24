@@ -57,12 +57,13 @@ public class InstagramBotService {
 
 	public void cleanFollowingUsers() {
 		LOGGER.info("Cleaning following users..");
-		User DBUser = userRepository.findByUsername(mainUsername);
+		User dbUser = userRepository.findByUsername(mainUsername);
 
-		List<FollowedInfo> currentlyFollowing = getCurrentlyFollowing(DBUser);
+		List<FollowedInfo> currentlyFollowing = getCurrentlyFollowing(dbUser);
 
 		currentlyFollowing =
 				currentlyFollowing.stream()
+						.sorted((o1, o2) -> o2.getDateFollowed().compareTo(o1.getDateFollowed()))
 						.limit(currentlyFollowing.size() / PERCENTAGE_OF_TOTAL_FOLLOWINGS_TO_BE_UNFOLLOWED)
 						.collect(Collectors.toList());
 
@@ -70,35 +71,34 @@ public class InstagramBotService {
 			try {
 				instagramFollowService.unfollow(user.getUsername());
 
-				// Retrieve the follower info
+				// Retrieve the follower info for the user
 				FollowedInfo currentFollowerInfo =
-						DBUser.getEverFollowed().stream()
+						dbUser.getEverFollowed().stream()
 								.filter(x -> x.getUsername().equals(user.getUsername()))
 								.findFirst().orElseThrow(RuntimeException::new);
 
 				// remove it from the following list
-				DBUser.getEverFollowed().remove(currentFollowerInfo);
+				dbUser.getEverFollowed().remove(currentFollowerInfo);
 
-				// change the status to not following anymore
+				// change the status to not following
 				currentFollowerInfo.setFollowStatus(FollowedInfo.FollowStatus.NOT_FOLLOWING);
 
-				// add again in the collection but now its marked as not following anymore
-				DBUser.getEverFollowed().add(currentFollowerInfo);
-				userRepository.saveAndFlush(DBUser);
+				// add again in the collection but now its marked as not following
+				dbUser.getEverFollowed().add(currentFollowerInfo);
+				userRepository.saveAndFlush(dbUser);
 			} catch (Exception e) {
 				LOGGER.error("Cannot unfollow user:{}", user.getUsername(), e);
 			}
 		});
 	}
 
-	private List<FollowedInfo> getCurrentlyFollowing(User DBUser) {
+	private List<FollowedInfo> getCurrentlyFollowing(User dbUser) {
 		LocalDateTime now = LocalDateTime.now();
 
 		// TODO:TEST IF THE SORTING IS WORKING
-		return DBUser.getEverFollowed().stream()
+		return dbUser.getEverFollowed().stream()
 				.filter(x -> x.getFollowStatus().equals(FollowedInfo.FollowStatus.FOLLOWING)
 						&& x.getDateFollowed().plusDays(FOLLOWED_AT_LEAST_DAYS_BEFORE).isBefore(now))
-				.sorted((o1, o2) -> o2.getDateFollowed().compareTo(o1.getDateFollowed()))
 				.collect(Collectors.toList());
 	}
 
@@ -132,11 +132,11 @@ public class InstagramBotService {
 
 	public void likePhotos() {
 		LOGGER.info("Starting to like last {} photos from the liking queue..", MAX_LIKES_PER_DAY);
-		User DBUser = userRepository.findByUsername(mainUsername);
+		User dbUser = userRepository.findByUsername(mainUsername);
 
-		Collection<String> photosToLike = getNElements(DBUser.getToLike(), MAX_LIKES_PER_DAY);
-		DBUser.getToLike().removeAll(photosToLike);
-		userRepository.saveAndFlush(DBUser);
+		Collection<String> photosToLike = getNElements(dbUser.getToLike(), MAX_LIKES_PER_DAY);
+		dbUser.getToLike().removeAll(photosToLike);
+		userRepository.saveAndFlush(dbUser);
 
 		new AutoSleepExecutor<>(photosToLike, MAX_LIKES_PER_DAY)
 				.runTask((photoId) -> {
@@ -193,16 +193,16 @@ public class InstagramBotService {
 	}
 
 	public void addPhotosFromHashtag() {
-		User DBUser = userRepository.findByUsername(mainUsername);
-		Set<String> hashtags = DBUser.getHashtags();
+		User dbUser = userRepository.findByUsername(mainUsername);
+		Set<String> hashtags = dbUser.getHashtags();
 		LOGGER.info("Starting to process hashtags {}", hashtags);
 
 		for (String hashtag : hashtags) {
 			List<String> currentHashtagPhotos =
 					instagramPhotoService.getPhotos(IGPhotosReq.TARGET_TYPE.HASHTAG, hashtag, LAST_HASHTAG_PHOTOS_COUNT);
 
-			DBUser.getToLike().addAll(currentHashtagPhotos);
-			userRepository.saveAndFlush(DBUser);
+			dbUser.getToLike().addAll(currentHashtagPhotos);
+			userRepository.saveAndFlush(dbUser);
 			LOGGER.info("Successfully added {} photos to like for hashtag:", currentHashtagPhotos.size(), hashtag);
 		}
 	}

@@ -13,7 +13,7 @@ import java.io.IOException;
 @Service
 public class InstagramLikeService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(IGLikesRequest.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(InstagramLikeService.class);
 
 	private IGUser mainIGUser = UsersPoolFactory.getUser(UserType.MAIN);
 

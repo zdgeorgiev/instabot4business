@@ -58,7 +58,7 @@ public class InstagramFollowService {
 
 	public void addTopTargetFollowers(String username, UserSortingStrategyType userSortingStrategy) {
 
-		User DBUser = userRepository.findByUsername(mainUsername);
+		User dbUser = userRepository.findByUsername(mainUsername);
 
 		List<String> userPhotoIds = instagramPhotoService
 				.getPhotos(IGPhotosReq.TARGET_TYPE.USER, username, LAST_USER_PHOTOS_COUNT);
@@ -66,8 +66,8 @@ public class InstagramFollowService {
 		List<String> topNotEverFollowedFollowers = instagramFollowService
 				.getTopNotEverFollowedFollowers(userPhotoIds, userSortingStrategy.getStrategyClass());
 
-		DBUser.getToFollow().addAll(topNotEverFollowedFollowers);
-		userRepository.saveAndFlush(DBUser);
+		dbUser.getToFollow().addAll(topNotEverFollowedFollowers);
+		userRepository.saveAndFlush(dbUser);
 		LOGGER.info("Added {} new users to follow from user:{}", topNotEverFollowedFollowers.size(), username);
 	}
 
@@ -116,7 +116,13 @@ public class InstagramFollowService {
 				.map(Map.Entry::getKey).collect(Collectors.toList());
 	}
 
-	public void unfollow(String username) throws Exception {
-
+	public void unfollow(String username) {
+		try {
+			new IGFollowersReq(mainIGUser).unfollow(username);
+			LOGGER.info("Successfully unfollowed user:{}", username);
+		} catch (Exception e) {
+			LOGGER.error("Cannot unfollow user:{}", username, e);
+			throw new RuntimeException(e);
+		}
 	}
 }

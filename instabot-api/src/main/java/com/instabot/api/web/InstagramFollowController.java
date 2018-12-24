@@ -37,4 +37,14 @@ public class InstagramFollowController {
 			@RequestParam UserSortingStrategyType userSortingStrategy) {
 		instagramFollowService.addTopTargetFollowers(username, userSortingStrategy);
 	}
+
+	@ResponseBody
+	@RequestMapping(value = "/unfollow", method = RequestMethod.POST)
+	@ResponseStatus(HttpStatus.OK)
+	@ApiOperation(value = "Unfollow specific user")
+	public void unfollowUser(
+			@ApiParam(name = "username", value = "Target username to unfollow")
+			@RequestParam String username) {
+		instagramFollowService.unfollow(username);
+	}
 }
