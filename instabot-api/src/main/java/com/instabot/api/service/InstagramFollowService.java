@@ -4,10 +4,7 @@ import com.instabot.api.model.UserSortingStrategyType;
 import com.instabot.api.model.entity.User;
 import com.instabot.api.model.repository.UserRepository;
 import com.instabot.api.pool.UsersPoolFactory;
-import com.instabot.core.filter.IGFilter;
-import com.instabot.core.filter.NoPhotoUserFilter;
-import com.instabot.core.filter.PrivateProfileFilter;
-import com.instabot.core.filter.SpamCommentFilter;
+import com.instabot.core.filter.*;
 import com.instabot.core.model.IGUser;
 import com.instabot.core.model.UserType;
 import com.instabot.core.request.IGCommentsReq;
@@ -67,7 +64,7 @@ public class InstagramFollowService {
 				.getPhotos(IGPhotosReq.TARGET_TYPE.USER, username, LAST_USER_PHOTOS_COUNT);
 
 		List<String> topNotEverFollowedFollowers = instagramFollowService
-				.getTopNotEverFollowedFollowers(userPhotoIds, userSortingStrategy.getStrategyClass(), TOP_FOLLOWERS_REQUEST_COUNT);
+				.getTopNotEverFollowedFollowers(userPhotoIds, userSortingStrategy.getStrategyClass());
 
 		DBUser.getToFollow().addAll(topNotEverFollowedFollowers);
 		userRepository.saveAndFlush(DBUser);
@@ -75,20 +72,20 @@ public class InstagramFollowService {
 	}
 
 	private List<String> getTopNotEverFollowedFollowers(List<String> mediaIds,
-			Class<? extends UserSortingStrategy> userSortingStrategy,
-			int topFollowersCount) {
+			Class<? extends UserSortingStrategy> userSortingStrategy) {
 
 		Map<String, Integer> topFollowers = findTopNotEverFollowedFollowers(mediaIds, userSortingStrategy);
-		return sortTopFollowers(topFollowers, topFollowersCount);
+		return sortTopFollowers(topFollowers);
 	}
 
 	private Map<String, Integer> findTopNotEverFollowedFollowers(List<String> mediaIds,
 			Class<? extends UserSortingStrategy> userSortingStrategy) {
 
 		List<Class<? extends IGFilter>> filters = Arrays.asList(
-				NoPhotoUserFilter.class,
-				PrivateProfileFilter.class,
-				SpamCommentFilter.class
+				UserWithProfilePictureFilter.class,
+				PublicProfileFilter.class,
+				NotASpamCommentFilter.class,
+				NotMainUserFilter.class
 		);
 
 		LOGGER.info("Finding top followers from the comments");
@@ -97,7 +94,6 @@ public class InstagramFollowService {
 						.applyFilters(filters)
 						.applyUserSortingStrategy(userSortingStrategy)
 						.getComments(mediaId))
-				//				.filter(user -> user) // TODO: dont include MAIN USER
 				.reduce((a1, a2) -> {
 							// If same user is present in couple of different medias
 							// then combine the values of the comments
@@ -107,7 +103,7 @@ public class InstagramFollowService {
 				).orElse(Collections.emptyMap());
 	}
 
-	private List<String> sortTopFollowers(Map<String, Integer> topFollowersScore, int topFollowersCount) {
+	private List<String> sortTopFollowers(Map<String, Integer> topFollowersScore) {
 		LOGGER.info("Sorting top followers list..");
 		return topFollowersScore.entrySet().stream()
 				.filter(follower ->
@@ -115,7 +111,7 @@ public class InstagramFollowService {
 								.getEverFollowed().stream()
 								.noneMatch(x -> x.getUsername().equals(follower.getKey())))
 				.sorted((Map.Entry.<String, Integer>comparingByValue().reversed()))
-				.limit(topFollowersCount)
+				.limit(TOP_FOLLOWERS_REQUEST_COUNT)
 				.collect(Collectors.toList()).stream()
 				.map(Map.Entry::getKey).collect(Collectors.toList());
 	}

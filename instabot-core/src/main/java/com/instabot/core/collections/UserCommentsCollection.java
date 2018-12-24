@@ -1,7 +1,6 @@
 package com.instabot.core.collections;
 
 import com.instabot.core.request.IGCommentsReq;
-import com.instabot.core.strategy.NoSortingStrategy;
 import com.instabot.core.strategy.UserSortingStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +13,7 @@ public class UserCommentsCollection {
 	private static final Logger LOGGER = LoggerFactory.getLogger(IGCommentsReq.class);
 
 	private Map<String, List<String>> userComments;
-	private UserSortingStrategy strategy = new NoSortingStrategy();
+	private UserSortingStrategy strategy;
 
 	public UserCommentsCollection() {
 		userComments = new HashMap<>();

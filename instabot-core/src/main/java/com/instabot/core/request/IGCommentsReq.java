@@ -6,7 +6,6 @@ import com.instabot.core.filter.IGFilter;
 import com.instabot.core.filter.UserFilter;
 import com.instabot.core.model.IGUser;
 import com.instabot.core.strategy.UserSortingStrategy;
-import org.apache.commons.lang3.StringUtils;
 import org.brunocvcunha.instagram4j.requests.InstagramGetMediaCommentsRequest;
 import org.brunocvcunha.instagram4j.requests.payload.InstagramGetMediaCommentsResult;
 import org.brunocvcunha.instagram4j.requests.payload.InstagramUser;
@@ -25,6 +24,7 @@ public class IGCommentsReq {
 
 	private static final int TIMEOUT_SLEEP_SECONDS = 30;
 	private static final int MAX_USER_COMMENTS_ON_PHOTO = 5;
+	private static final int MAX_CALLBACK_FAILS = 30;
 
 	private UserCommentsCollection userComments;
 	private IGUser user;
@@ -42,7 +42,7 @@ public class IGCommentsReq {
 		LOGGER.info("Starting to collect comments for media: {}", mediaCode);
 
 		try {
-			executeRequest(mediaCode);
+			executeRequest(mediaCode, 0);
 		} catch (InterruptedException e) {
 			LOGGER.error("Thread cannot sleep", e);
 		}
@@ -53,7 +53,12 @@ public class IGCommentsReq {
 		return userComments.normalize();
 	}
 
-	private void executeRequest(String mediaCode) throws InterruptedException {
+	private void executeRequest(String mediaCode, int callbackFails) throws InterruptedException {
+
+		if (callbackFails == MAX_CALLBACK_FAILS) {
+			LOGGER.info("Already called {} times executeRequest function so breaking..", callbackFails);
+			return;
+		}
 
 		try {
 			while (true) {
@@ -61,22 +66,13 @@ public class IGCommentsReq {
 						user.getInstagram4jIGClient().sendRequest(new InstagramGetMediaCommentsRequest(mediaCode, nextMediaPage));
 
 				commentsResult.getComments()
-						.forEach(comment -> {
-							InstagramUser user = comment.getUser();
-							String commentText = comment.getText();
+						.forEach(c -> {
+							InstagramUser user = c.getUser();
+							String comment = c.getText();
+							boolean shouldInclude = applyFilters(user, comment);
 
-							for (IGFilter<?> filter : filters) {
-								if (filter instanceof CommentFilter)
-									commentText = ((CommentFilter) filter).apply(commentText);
-								else if (filter instanceof UserFilter) {
-									user = ((UserFilter) filter).apply(user);
-								} else {
-									throw new UnsupportedOperationException("Not supporting " + filter.getClass().getName());
-								}
-							}
-
-							if (isUserValid(user) && isCommentValid(commentText))
-								userComments.addComment(user.username, commentText);
+							if (shouldInclude)
+								userComments.addComment(user.username, comment);
 						});
 
 				nextMediaPage = commentsResult.getNext_max_id();
@@ -88,21 +84,33 @@ public class IGCommentsReq {
 		} catch (Exception e) {
 			LOGGER.info("Sleeping for {}s because of too much requests.", TIMEOUT_SLEEP_SECONDS, e);
 			Thread.sleep(TIMEOUT_SLEEP_SECONDS * 1000);
-			executeRequest(mediaCode);
+			executeRequest(mediaCode, ++callbackFails);
 		}
+	}
+
+	private boolean applyFilters(InstagramUser user, String commentText) {
+		boolean shouldInclude = true;
+
+		for (IGFilter<?> filter : filters) {
+
+			if (!shouldInclude)
+				break;
+
+			if (filter instanceof CommentFilter) {
+				shouldInclude = ((CommentFilter) filter).apply(commentText);
+			} else if (filter instanceof UserFilter) {
+				shouldInclude = ((UserFilter) filter).apply(user);
+			} else {
+				throw new UnsupportedOperationException("Not supporting " + filter.getClass().getName());
+			}
+		}
+
+		return shouldInclude;
 	}
 
 	public final IGCommentsReq applyFilters(List<Class<? extends IGFilter>> filters) {
 		this.filters = initializeFilters(filters);
 		return this;
-	}
-
-	private boolean isCommentValid(String comment) {
-		return !StringUtils.isEmpty(comment);
-	}
-
-	private boolean isUserValid(InstagramUser user) {
-		return user != null;
 	}
 
 	private List<IGFilter> initializeFilters(List<Class<? extends IGFilter>> filters) {

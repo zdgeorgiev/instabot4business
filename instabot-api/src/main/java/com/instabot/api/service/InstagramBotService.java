@@ -114,12 +114,12 @@ public class InstagramBotService {
 		private Collection<T> collection;
 		private int executionsLimit;
 
-		public AutoSleepExecutor(Collection<T> collection, int executionsLimit) {
+		AutoSleepExecutor(Collection<T> collection, int executionsLimit) {
 			this.collection = collection;
 			this.executionsLimit = executionsLimit;
 		}
 
-		public void runTask(Executor<T> executor) {
+		void runTask(Executor<T> executor) {
 			collection.forEach(element -> {
 
 				try {
