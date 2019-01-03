@@ -1,5 +1,6 @@
 package com.instabot.api.service;
 
+import com.instabot.api.filter.LessThanNFollowersFilter;
 import com.instabot.api.model.UserSortingStrategyType;
 import com.instabot.api.model.entity.User;
 import com.instabot.api.model.repository.UserRepository;
@@ -17,10 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,7 +47,7 @@ public class InstagramFollowService {
 	public void follow(String username) {
 		try {
 			new IGFollowersReq(mainIGUser).followUser(username);
-			LOGGER.info("{} user:{} followed {}..", mainIGUser.getUserType(), mainIGUser.getUsername(), username);
+			LOGGER.info("{} user:{} followed {}", mainIGUser.getUserType(), mainIGUser.getUsername(), username);
 		} catch (IOException e) {
 			LOGGER.error("Cannot follow user {}", username, e);
 			throw new RuntimeException(e);
@@ -59,12 +57,15 @@ public class InstagramFollowService {
 	public void addTopTargetFollowers(String username, UserSortingStrategyType userSortingStrategy) {
 
 		User dbUser = userRepository.findByUsername(mainUsername);
+		Set<String> usersBlacklist = new HashSet<>();
+		usersBlacklist.add(username);
+		usersBlacklist.add(mainUsername);
 
 		List<String> userPhotoIds = instagramPhotoService
 				.getPhotos(IGPhotosReq.TARGET_TYPE.USER, username, LAST_USER_PHOTOS_COUNT);
 
 		List<String> topNotEverFollowedFollowers = instagramFollowService
-				.getTopNotEverFollowedFollowers(userPhotoIds, userSortingStrategy.getStrategyClass());
+				.getTopNotEverFollowedFollowers(userPhotoIds, userSortingStrategy.getStrategyClass(), usersBlacklist);
 
 		dbUser.getToFollow().addAll(topNotEverFollowedFollowers);
 		userRepository.saveAndFlush(dbUser);
@@ -72,10 +73,13 @@ public class InstagramFollowService {
 	}
 
 	private List<String> getTopNotEverFollowedFollowers(List<String> mediaIds,
-			Class<? extends UserSortingStrategy> userSortingStrategy) {
+			Class<? extends UserSortingStrategy> userSortingStrategy, Set<String> usersBlacklist) {
 
 		Map<String, Integer> topFollowers = findTopNotEverFollowedFollowers(mediaIds, userSortingStrategy);
-		return sortTopFollowers(topFollowers);
+
+		return sortTopFollowers(topFollowers, usersBlacklist).stream()
+				.limit(TOP_FOLLOWERS_REQUEST_COUNT)
+				.collect(Collectors.toList());
 	}
 
 	private Map<String, Integer> findTopNotEverFollowedFollowers(List<String> mediaIds,
@@ -85,10 +89,12 @@ public class InstagramFollowService {
 				UserWithProfilePictureFilter.class,
 				PublicProfileFilter.class,
 				NotASpamCommentFilter.class,
-				NotMainUserFilter.class
+				NotABusinessAccount.class,
+				LessThanNFollowersFilter.class
 		);
 
 		LOGGER.info("Finding top followers from the comments");
+
 		return mediaIds.stream()
 				.map(mediaId -> new IGCommentsReq(fakeIGUser)
 						.applyFilters(filters)
@@ -103,17 +109,21 @@ public class InstagramFollowService {
 				).orElse(Collections.emptyMap());
 	}
 
-	private List<String> sortTopFollowers(Map<String, Integer> topFollowersScore) {
+	private List<String> sortTopFollowers(Map<String, Integer> topFollowersScore, Set<String> usersBlacklist) {
 		LOGGER.info("Sorting top followers list..");
 		return topFollowersScore.entrySet().stream()
-				.filter(follower ->
-						userRepository.findByUsername(mainIGUser.getUsername())
-								.getEverFollowed().stream()
-								.noneMatch(x -> x.getUsername().equals(follower.getKey())))
 				.sorted((Map.Entry.<String, Integer>comparingByValue().reversed()))
-				.limit(TOP_FOLLOWERS_REQUEST_COUNT)
 				.collect(Collectors.toList()).stream()
-				.map(Map.Entry::getKey).collect(Collectors.toList());
+				.map(Map.Entry::getKey)
+				.filter(this::neverFollowed)
+				.filter(x -> !usersBlacklist.contains(x))
+				.collect(Collectors.toList());
+	}
+
+	private boolean neverFollowed(String username) {
+		return userRepository.findByUsername(mainIGUser.getUsername())
+				.getEverFollowed().stream()
+				.noneMatch(x -> x.getUsername().equals(username));
 	}
 
 	public void unfollow(String username) {

@@ -14,8 +14,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,8 +25,8 @@ public class InstagramBotService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(InstagramBotService.class);
 
-	private static final Integer MAX_FOLLOWS_PER_DAY = 120;
-	private static final Integer MAX_LIKES_PER_DAY = 300;
+	private static final Integer MAX_FOLLOWS_PER_DAY = 200;
+	private static final Integer MAX_LIKES_PER_DAY = 400;
 
 	private static final Integer MIN_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH = 15;
 	private static final Integer MAX_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH = 20;
@@ -63,13 +65,16 @@ public class InstagramBotService {
 
 		currentlyFollowing =
 				currentlyFollowing.stream()
-						.sorted((o1, o2) -> o2.getDateFollowed().compareTo(o1.getDateFollowed()))
+						.sorted(Comparator.comparing(FollowedInfo::getDateFollowed))
 						.limit(currentlyFollowing.size() / PERCENTAGE_OF_TOTAL_FOLLOWINGS_TO_BE_UNFOLLOWED)
 						.collect(Collectors.toList());
+
+		AtomicInteger unfollowedUsers = new AtomicInteger();
 
 		currentlyFollowing.forEach(user -> {
 			try {
 				instagramFollowService.unfollow(user.getUsername());
+				unfollowedUsers.getAndIncrement();
 
 				// Retrieve the follower info for the user
 				FollowedInfo currentFollowerInfo =
@@ -90,12 +95,13 @@ public class InstagramBotService {
 				LOGGER.error("Cannot unfollow user:{}", user.getUsername(), e);
 			}
 		});
+
+		LOGGER.info("Successfully unfollowed {} users", unfollowedUsers);
 	}
 
 	private List<FollowedInfo> getCurrentlyFollowing(User dbUser) {
 		LocalDateTime now = LocalDateTime.now();
 
-		// TODO:TEST IF THE SORTING IS WORKING
 		return dbUser.getEverFollowed().stream()
 				.filter(x -> x.getFollowStatus().equals(FollowedInfo.FollowStatus.FOLLOWING)
 						&& x.getDateFollowed().plusDays(FOLLOWED_AT_LEAST_DAYS_BEFORE).isBefore(now))
@@ -104,25 +110,24 @@ public class InstagramBotService {
 
 	public void followUsers() {
 		LOGGER.info("Starting to following last {} users from the queue..", MAX_FOLLOWS_PER_DAY);
-		User DBUser = userRepository.findByUsername(mainUsername);
+		User dbUser = userRepository.findByUsername(mainUsername);
 
-		Collection<String> usersToFollow = getNElements(DBUser.getToFollow(), MAX_FOLLOWS_PER_DAY);
-		DBUser.getToFollow().removeAll(usersToFollow);
-		userRepository.saveAndFlush(DBUser);
+		Collection<String> usersToFollow = getNElements(dbUser.getToFollow(), MAX_FOLLOWS_PER_DAY);
+
+		AtomicInteger followedUsers = new AtomicInteger();
 
 		new AutoSleepExecutor<>(usersToFollow, MAX_FOLLOWS_PER_DAY)
 				.runTask((username) -> {
-					LOGGER.info("Created follow request for user:{}..", username);
-
-					if (DBUser.getEverFollowed().stream().noneMatch(x -> x.getUsername().equals(username))) {
-						instagramFollowService.follow(username);
-						DBUser.getEverFollowed().add(new FollowedInfo(username));
-					} else {
-						LOGGER.info("User:{} already followed before", username);
-					}
+					LOGGER.info("Created follow request for user:{} ({}/{})",
+							username, followedUsers.get() + 1, usersToFollow.size());
+					instagramFollowService.follow(username);
+					dbUser.getToFollow().remove(username);
+					followedUsers.getAndIncrement();
+					dbUser.getEverFollowed().add(new FollowedInfo(username));
+					userRepository.saveAndFlush(dbUser);
 				});
 
-		userRepository.saveAndFlush(DBUser);
+		LOGGER.info("Successfully followed {} users", followedUsers);
 		LOGGER.info("Following users is done for today.");
 	}
 
@@ -135,19 +140,27 @@ public class InstagramBotService {
 		User dbUser = userRepository.findByUsername(mainUsername);
 
 		Collection<String> photosToLike = getNElements(dbUser.getToLike(), MAX_LIKES_PER_DAY);
-		dbUser.getToLike().removeAll(photosToLike);
-		userRepository.saveAndFlush(dbUser);
+
+		AtomicInteger likedPhotos = new AtomicInteger();
 
 		new AutoSleepExecutor<>(photosToLike, MAX_LIKES_PER_DAY)
 				.runTask((photoId) -> {
-					LOGGER.info("Created like request for photo:{}..", photoId);
+					LOGGER.info("Created like request for photo:{} ({}/{})",
+							photoId, likedPhotos.get() + 1, photosToLike.size());
+					// First we can remove it because if the photo is deleted
+					// we will get an exception, but we don't care, so will delete it first
+					dbUser.getToLike().remove(photoId);
+					userRepository.saveAndFlush(dbUser);
 					instagramLikeService.likePhoto(photoId);
+					likedPhotos.getAndIncrement();
 				});
 
+		LOGGER.info("Successfully liked {} photos", likedPhotos);
 		LOGGER.info("Liking photos is done for today.");
 	}
 
 	private interface Executor<T> {
+
 		void execute(T element) throws Exception;
 	}
 
@@ -169,15 +182,15 @@ public class InstagramBotService {
 				try {
 					executor.execute(element);
 				} catch (Exception e) {
-					LOGGER.error("Failed to execute the operation from AutoSleepExecutor for element {} ,"
+					LOGGER.error("Failed to execute the operation from AutoSleepExecutor for element:{} ,"
 							+ " but will continue with the other elements", element, e);
 				}
 
-				double secondsToSleep = returnSleepInSeconds(executionsLimit);
-				LOGGER.info("Sleeping for {} minutes", String.format("%.2g", secondsToSleep / 60));
+				long secondsToSleep = returnSleepInSeconds(executionsLimit);
+				LOGGER.info("Sleeping for {} minutes", String.format("%.2g", secondsToSleep / 60.0));
 
 				try {
-					Thread.sleep((long) secondsToSleep * 1000);
+					Thread.sleep(secondsToSleep * 1000);
 				} catch (InterruptedException e) {
 					LOGGER.error("Cannot sleep AutoSleepExecutor thread", e);
 				}
@@ -185,8 +198,8 @@ public class InstagramBotService {
 		}
 
 		private long returnSleepInSeconds(int taskCount) {
-			int minTimeToSleepInSeconds = (MIN_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH / taskCount) * 60 * 60;
-			int maxTimeToSleepInSeconds = (MAX_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH / taskCount) * 60 * 60;
+			int minTimeToSleepInSeconds = (int) (((double) MIN_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH / taskCount) * 60 * 60);
+			int maxTimeToSleepInSeconds = (int) (((double) MAX_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH / taskCount) * 60 * 60);
 			return (long) Math
 					.ceil(minTimeToSleepInSeconds + (Math.random() * (maxTimeToSleepInSeconds - minTimeToSleepInSeconds)));
 		}
@@ -202,8 +215,9 @@ public class InstagramBotService {
 					instagramPhotoService.getPhotos(IGPhotosReq.TARGET_TYPE.HASHTAG, hashtag, LAST_HASHTAG_PHOTOS_COUNT);
 
 			dbUser.getToLike().addAll(currentHashtagPhotos);
-			userRepository.saveAndFlush(dbUser);
-			LOGGER.info("Successfully added {} photos to like for hashtag:", currentHashtagPhotos.size(), hashtag);
+			LOGGER.info("Successfully added {} photos to like for hashtag:{}", currentHashtagPhotos.size(), hashtag);
 		}
+
+		userRepository.saveAndFlush(dbUser);
 	}
 }

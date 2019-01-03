@@ -17,8 +17,8 @@ public class InstagramBotController {
 	@Autowired
 	private InstagramBotService instagramBotService;
 
-	// Every friday at 5PM
-	@Scheduled(cron = "0 0 17 * * FRI")
+	// Every day at 5PM
+	@Scheduled(cron = "0 0 17 * * *")
 	@RequestMapping(value = "/cleanFollowings", method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
 	@ApiOperation(value = "Clean following users")
@@ -34,6 +34,8 @@ public class InstagramBotController {
 	public void followUsers() {
 		instagramBotService.followUsers();
 	}
+
+	// TODO:MAYBE TWO SCHEDULED CANNOT BE EXECUTED AT ONCE AND SECOND IS WAITING THE FIRST TO FINISH ?
 
 	// Every day at 5PM
 	@Scheduled(cron = "0 0 17 * * *")
