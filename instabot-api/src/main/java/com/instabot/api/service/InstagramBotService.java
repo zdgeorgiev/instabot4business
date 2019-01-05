@@ -6,7 +6,6 @@ import com.instabot.api.model.repository.UserRepository;
 import com.instabot.api.pool.UsersPoolFactory;
 import com.instabot.core.model.IGUser;
 import com.instabot.core.model.UserType;
-import com.instabot.core.request.IGPhotosReq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +19,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static com.instabot.core.request.IGPhotosReq.TARGET_TYPE.HASHTAG;
+
 @Service
 public class InstagramBotService {
 
@@ -31,12 +32,8 @@ public class InstagramBotService {
 	private static final Integer MIN_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH = 15;
 	private static final Integer MAX_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH = 20;
 
-	private static final Integer TOP_LIKERS_REQUEST_COUNT = 50;
-
-	private static final Integer LAST_HASHTAG_PHOTOS_COUNT = 3;
-	private static final Integer LAST_TOP_LIKERS_PHOTOS_COUNT = 8;
-
-	private static final Integer TOP_LIKERS_PHOTOS_TO_BE_LIKED_COUNT = 2;
+	private static final Integer HASHTAG_PHOTOS_TOGET = 12;
+	private static final Integer HASHTAG_PHOTOS_TORETURN = 3;
 
 	private static final Integer PERCENTAGE_OF_TOTAL_FOLLOWINGS_TO_BE_UNFOLLOWED = 15;
 	private static final Integer FOLLOWED_AT_LEAST_DAYS_BEFORE = 3;
@@ -212,7 +209,7 @@ public class InstagramBotService {
 
 		for (String hashtag : hashtags) {
 			List<String> currentHashtagPhotos =
-					instagramPhotoService.getPhotos(IGPhotosReq.TARGET_TYPE.HASHTAG, hashtag, LAST_HASHTAG_PHOTOS_COUNT);
+					instagramPhotoService.getPhotos(HASHTAG, hashtag, HASHTAG_PHOTOS_TOGET, HASHTAG_PHOTOS_TORETURN, true);
 
 			dbUser.getToLike().addAll(currentHashtagPhotos);
 			LOGGER.info("Successfully added {} photos to like for hashtag:{}", currentHashtagPhotos.size(), hashtag);

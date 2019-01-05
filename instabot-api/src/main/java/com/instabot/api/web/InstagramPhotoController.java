@@ -22,14 +22,20 @@ public class InstagramPhotoController {
 	@ResponseStatus(HttpStatus.OK)
 	@ApiOperation(value = "Get photos for specific type.")
 	public List<String> getPhotosForTargetType(
-			@ApiParam(name = "target", value = "Target name")
+			@ApiParam(name = "target", value = "Target name.")
 			@RequestParam String target,
 
-			@ApiParam(name = "targetType", value = "Photo for user or hashtag")
+			@ApiParam(name = "targetType", value = "Photo for user or hashtag.")
 			@RequestParam(name = "targetType", defaultValue = "USER") TARGET_TYPE targetType,
 
-			@ApiParam(name = "limit", value = "max photos to return")
-			@RequestParam(name = "limit", required = false, defaultValue = "100") Integer limit) {
-		return instagramPhotoService.getPhotos(targetType, target, limit);
+			@ApiParam(name = "photosToGet", value = "Photos to get from the target.")
+			@RequestParam(name = "photosToGet", required = false, defaultValue = "30") Integer photosToGet,
+
+			@ApiParam(name = "photosToReturn", value = "Photos to return.")
+			@RequestParam(name = "photosToReturn", required = false, defaultValue = "30") Integer photosToReturn,
+
+			@ApiParam(name = "random", value = "Random photos to return.")
+			@RequestParam(name = "random", required = false, defaultValue = "false") Boolean randomOrder) {
+		return instagramPhotoService.getPhotos(targetType, target, photosToGet, photosToReturn, randomOrder);
 	}
 }

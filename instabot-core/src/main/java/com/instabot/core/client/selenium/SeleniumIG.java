@@ -12,22 +12,13 @@ public final class SeleniumIG {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SeleniumIG.class);
 
-	private static RemoteWebDriver driver;
+	private static RemoteWebDriver driver = SeleniumIGFactory.getClient();
 
 	private SeleniumIG() {
 
 	}
 
-	public static RemoteWebDriver getClient(String username, String password) {
-
-		driver = SeleniumFactory.getDriver();
-
-		login(username, password);
-
-		return driver;
-	}
-
-	private static void login(String username, String password) {
+	public static RemoteWebDriver loginIG(String username, String password) {
 		try {
 			driver.get(IG_LOGIN_URL);
 
@@ -40,7 +31,9 @@ public final class SeleniumIG {
 
 			Thread.sleep(2000);
 		} catch (Exception e) {
-			LOGGER.warn("Error during login", e);
+			LOGGER.warn("Error during loginIG", e);
 		}
+
+		return driver;
 	}
 }

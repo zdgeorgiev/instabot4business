@@ -5,6 +5,7 @@ import com.instabot.core.model.IGUser;
 import org.openqa.selenium.By;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,13 +32,14 @@ public class IGPhotosReq {
 		this.user = user;
 	}
 
-	public List<String> getPhotosFor(TARGET_TYPE targetType, String target, int limit) throws InterruptedException {
+	public List<String> getPhotosFor(TARGET_TYPE targetType, String target, int photosToGet, int photosToReturn, boolean random)
+			throws InterruptedException {
 
 		List<String> mediaUrls = new ArrayList<>();
 
 		user.getSeleniumIGClient().get(String.format(targetType.getTypeUrl(), target));
 
-		while (mediaUrls.size() < limit) {
+		while (mediaUrls.size() < photosToGet) {
 
 			int previousIterationPhotosCount = mediaUrls.size();
 
@@ -55,9 +57,15 @@ public class IGPhotosReq {
 			Thread.sleep(2000);
 		}
 
-		return mediaUrls.stream()
+		mediaUrls = mediaUrls.stream()
 				.map(x -> x.substring(x.indexOf("p/") + 2, x.lastIndexOf("/")))
-				.limit(limit)
+				.limit(photosToGet)
 				.collect(Collectors.toList());
+
+		if (random) {
+			Collections.shuffle(mediaUrls);
+		}
+
+		return mediaUrls.stream().limit(photosToReturn).collect(Collectors.toList());
 	}
 }

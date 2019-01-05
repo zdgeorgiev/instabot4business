@@ -18,6 +18,8 @@ public class LessThanNFollowersFilter implements UserFilter {
 	public boolean apply(InstagramUser user) {
 		fakeUser.getSeleniumIGClient().get(String.format(IG_PROFILE_URL, user.getUsername()));
 		String followers = fakeUser.getSeleniumIGClient().findElementsByClassName("g47SY ").get(1).getText();
+		followers = followers.replace(",", "");
+		followers = followers.replace(".", "");
 		return !followers.contains("k") && !followers.contains("m") && Integer.parseInt(followers) < FOLLOWERS_LIMIT;
 	}
 }

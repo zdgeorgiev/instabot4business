@@ -56,7 +56,7 @@ public class IGCommentsReq {
 	private void executeRequest(String mediaCode, int callbackFails) throws InterruptedException {
 
 		if (callbackFails == MAX_CALLBACK_FAILS) {
-			LOGGER.info("Already called {} times executeRequest function so breaking..", callbackFails);
+			LOGGER.warn("Already called {} times executeRequest function so breaking..", callbackFails);
 			return;
 		}
 
@@ -116,7 +116,7 @@ public class IGCommentsReq {
 	private List<IGFilter> initializeFilters(List<Class<? extends IGFilter>> filters) {
 		return filters.stream().map(filter -> {
 			try {
-				LOGGER.info("Adding {}", filter.getName());
+				LOGGER.debug("Adding {}", filter.getName());
 				return filter.newInstance();
 			} catch (InstantiationException | IllegalAccessException e) {
 				throw new RuntimeException("Cannot create filter " + filter.getName(), e);

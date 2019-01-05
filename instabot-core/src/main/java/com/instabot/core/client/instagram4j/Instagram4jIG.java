@@ -17,19 +17,16 @@ public final class Instagram4jIG {
 
 	}
 
-	public static Instagram4j getClient(String username, String password) {
+	public static Instagram4j loginIG(String username, String password) {
 
-		if (userClient != null) {
-			LOGGER.debug("Returning already logged Instagram4j client..");
-			return userClient;
+		if (userClient == null) {
+			userClient = Instagram4j.builder()
+					.username(username)
+					.password(password)
+					.build();
+
+			userClient.setup();
 		}
-
-		userClient = Instagram4j.builder()
-				.username(username)
-				.password(password)
-				.build();
-
-		userClient.setup();
 
 		LOGGER.info("Login Instagram4j client with username: {}, password {}",
 				username, StringUtils.repeat("*", password.length()));
@@ -37,8 +34,8 @@ public final class Instagram4jIG {
 		try {
 			userClient.login();
 		} catch (IOException e) {
-			LOGGER.error("Cannot getDriver.", e);
-			throw new RuntimeException("Cannot getDriver.");
+			LOGGER.error("Cannot getClient.", e);
+			throw new RuntimeException("Cannot getClient.");
 		}
 
 		return userClient;

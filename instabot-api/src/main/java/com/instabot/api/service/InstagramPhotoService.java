@@ -18,16 +18,17 @@ public class InstagramPhotoService {
 
 	private IGUser fakeIGUser = UsersPoolFactory.getUser(UserType.FAKE);
 
-	public List<String> getPhotos(TARGET_TYPE targetType, String target, int limit) {
+	public List<String> getPhotos(TARGET_TYPE targetType, String target, int photosToGet, int photosToReturn, boolean random) {
 		String tType = (targetType.equals(TARGET_TYPE.USER) ? "user" : "hashtag");
-		LOGGER.info("Collecting {} photos for ({}:{})", limit, tType, target);
+		LOGGER.info("Collecting {} photos for ({}:{})", photosToGet, tType, target);
 
 		try {
-			List<String> photoIds = new IGPhotosReq(fakeIGUser).getPhotosFor(targetType, target, limit);
+			List<String> photoIds =
+					new IGPhotosReq(fakeIGUser).getPhotosFor(targetType, target, photosToGet, photosToReturn, random);
 			LOGGER.info("Successfully collected {} photos", photoIds.size());
 			return photoIds;
 		} catch (Exception e) {
-			LOGGER.error("Cannot get last {} photos ({}:{})", limit, tType, target, e);
+			LOGGER.error("Cannot get last {} photos ({}:{})", photosToGet, tType, target, e);
 			throw new RuntimeException(e);
 		}
 	}

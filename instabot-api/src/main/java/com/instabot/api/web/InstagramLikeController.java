@@ -25,12 +25,16 @@ public class InstagramLikeController {
 	}
 
 	@ResponseBody
-	@RequestMapping(value = "/addLikers", method = RequestMethod.POST)
+	@RequestMapping(value = "/processTopLikers", method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.CREATED)
-	@ApiOperation(value = "Add top likers for a user in the liking queue for the current user")
-	public void addTopTargetLikers(
-			@ApiParam(name = "username", value = "Target username from which we want to get its top likers")
-			@RequestParam String username) {
-		instagramLikeService.addTopTargetLikers(username);
+	@ApiOperation(value = "Process the top likers for target based on that who likes the most "
+			+ "add most of them to like some of their photos and small part of them to be followed.")
+	public void processTopLikers(
+			@ApiParam(name = "username", value = "Target username from which we want to get its top likers.")
+			@RequestParam String username,
+
+			@ApiParam(name = "limit", value = "Top likers to return.")
+			@RequestParam(name = "limit", required = false, defaultValue = "100") Integer limit) {
+		instagramLikeService.processTopLikers(username, limit);
 	}
 }

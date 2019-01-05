@@ -2,7 +2,7 @@ package com.instabot.core.model;
 
 import com.instabot.core.client.instagram4j.Instagram4jIG;
 import com.instabot.core.client.selenium.SeleniumIG;
-import com.instabot.core.model.exception.CannotInitializeDriverException;
+import com.instabot.core.model.exception.CannotInitializeClientException;
 import org.brunocvcunha.instagram4j.Instagram4j;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
@@ -27,11 +27,11 @@ public abstract class IGUser {
 
 	public void login() {
 		LOGGER.info("Login {} user {}", this.userType, this.username);
-		initDriver(DriverType.SELENIUM);
-		initDriver(DriverType.INSTAGRAM4J);
+		loginDriver(DriverType.SELENIUM);
+		loginDriver(DriverType.INSTAGRAM4J);
 	}
 
-	private void initDriver(DriverType driver) {
+	private void loginDriver(DriverType driver) {
 		LOGGER.info("Initializing driver {} for user {}", driver, this.username);
 		try {
 			switch (driver) {
@@ -39,22 +39,23 @@ public abstract class IGUser {
 				seleniumIGClient = initSeleniumIGClient();
 				break;
 			case INSTAGRAM4J:
-				instagram4jIGClient = initInstagram4jClient();
+				instagram4jIGClient = initInstagram4jClientAndLogin();
+				break;
 			}
-		} catch (CannotInitializeDriverException e) {
+		} catch (CannotInitializeClientException e) {
 			LOGGER.error("Cannot init driver {}", driver, e);
 			throw new RuntimeException(e);
 		}
 	}
 
 	// Register Selenium client for the user
-	protected RemoteWebDriver initSeleniumIGClient() throws CannotInitializeDriverException {
-		return SeleniumIG.getClient(this.username, this.password);
+	protected RemoteWebDriver initSeleniumIGClient() throws CannotInitializeClientException {
+		return SeleniumIG.loginIG(this.username, this.password);
 	}
 
 	// Register Instagram4j client for the user
-	protected Instagram4j initInstagram4jClient() throws CannotInitializeDriverException {
-		return Instagram4jIG.getClient(this.username, this.password);
+	protected Instagram4j initInstagram4jClientAndLogin() throws CannotInitializeClientException {
+		return Instagram4jIG.loginIG(this.username, this.password);
 	}
 
 	public String getUsername() {

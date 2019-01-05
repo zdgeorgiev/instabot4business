@@ -10,7 +10,6 @@ import com.instabot.core.model.IGUser;
 import com.instabot.core.model.UserType;
 import com.instabot.core.request.IGCommentsReq;
 import com.instabot.core.request.IGFollowersReq;
-import com.instabot.core.request.IGPhotosReq;
 import com.instabot.core.strategy.UserSortingStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,23 +20,25 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.instabot.core.request.IGPhotosReq.TARGET_TYPE.USER;
+
 @Service
 public class InstagramFollowService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(InstagramFollowService.class);
 
-	private static final Integer TOP_FOLLOWERS_REQUEST_COUNT = 100;
+	private static final Integer USER_PHOTOS_TOGET = 30;
 
-	private static final Integer LAST_USER_PHOTOS_COUNT = 30;
+	private static final Integer TOP_FOLLOWERS_PERCENTAGE_TOFOLLOW = 75;
+
+	private static final Integer TOP_FOLLOWERS_PHOTOS_TOGET = 3;
+	private static final Integer TOP_FOLLOWERS_PHOTOS_TORETURN = 1;
 
 	@Autowired
 	private UserRepository userRepository;
 
 	@Autowired
 	private InstagramPhotoService instagramPhotoService;
-
-	@Autowired
-	private InstagramFollowService instagramFollowService;
 
 	private IGUser mainIGUser = UsersPoolFactory.getUser(UserType.MAIN);
 	private IGUser fakeIGUser = UsersPoolFactory.getUser(UserType.FAKE);
@@ -54,7 +55,18 @@ public class InstagramFollowService {
 		}
 	}
 
-	public void addTopTargetFollowers(String username, UserSortingStrategyType userSortingStrategy) {
+	public void unfollow(String username) {
+		try {
+			new IGFollowersReq(mainIGUser).unfollow(username);
+			LOGGER.info("Successfully unfollowed user:{}", username);
+		} catch (Exception e) {
+			LOGGER.error("Cannot unfollow user:{}", username, e);
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void processTopFollowers(String username, UserSortingStrategyType userSortingStrategy, int limit) {
+		LOGGER.info("Starting to process top {} followers for users:{}", limit, username);
 
 		User dbUser = userRepository.findByUsername(mainUsername);
 		Set<String> usersBlacklist = new HashSet<>();
@@ -62,24 +74,37 @@ public class InstagramFollowService {
 		usersBlacklist.add(mainUsername);
 
 		List<String> userPhotoIds = instagramPhotoService
-				.getPhotos(IGPhotosReq.TARGET_TYPE.USER, username, LAST_USER_PHOTOS_COUNT);
+				.getPhotos(USER, username, USER_PHOTOS_TOGET, USER_PHOTOS_TOGET, false);
 
-		List<String> topNotEverFollowedFollowers = instagramFollowService
-				.getTopNotEverFollowedFollowers(userPhotoIds, userSortingStrategy.getStrategyClass(), usersBlacklist);
+		List<String> topNotEverFollowedFollowers =
+				getTopNotEverFollowedFollowers(userPhotoIds, userSortingStrategy.getStrategyClass(), usersBlacklist, limit);
 
-		dbUser.getToFollow().addAll(topNotEverFollowedFollowers);
+		int usersToFollow = (int) (topNotEverFollowedFollowers.size() * (TOP_FOLLOWERS_PERCENTAGE_TOFOLLOW / 100.0));
+		int usersToLike = topNotEverFollowedFollowers.size() - usersToFollow;
+
+		List<String> toFollow = topNotEverFollowedFollowers.subList(0, usersToFollow);
+		List<String> toLike = topNotEverFollowedFollowers.subList(usersToFollow, usersToFollow + usersToLike);
+
+		// Add toFollow users in the following queue
+		dbUser.getToFollow().addAll(toFollow);
+
+		// Add photos in the liking queue from each user in toLike users
+		for (String user : toLike) {
+			dbUser.getToLike().addAll(instagramPhotoService
+					.getPhotos(USER, user, TOP_FOLLOWERS_PHOTOS_TOGET, TOP_FOLLOWERS_PHOTOS_TORETURN, true));
+		}
+
 		userRepository.saveAndFlush(dbUser);
-		LOGGER.info("Added {} new users to follow from user:{}", topNotEverFollowedFollowers.size(), username);
+		LOGGER.info("Added {} new users to follow from top followers for user:{}",
+				toFollow.size(), username);
+		LOGGER.info("Added {} new photos to like from top followers for user:{}",
+				toLike.size() * TOP_FOLLOWERS_PHOTOS_TORETURN, username);
 	}
 
 	private List<String> getTopNotEverFollowedFollowers(List<String> mediaIds,
-			Class<? extends UserSortingStrategy> userSortingStrategy, Set<String> usersBlacklist) {
+			Class<? extends UserSortingStrategy> userSortingStrategy, Set<String> usersBlacklist, int limit) {
 
-		Map<String, Integer> topFollowers = findTopNotEverFollowedFollowers(mediaIds, userSortingStrategy);
-
-		return sortTopFollowers(topFollowers, usersBlacklist).stream()
-				.limit(TOP_FOLLOWERS_REQUEST_COUNT)
-				.collect(Collectors.toList());
+		return toSortedList(findTopNotEverFollowedFollowers(mediaIds, userSortingStrategy), usersBlacklist, limit);
 	}
 
 	private Map<String, Integer> findTopNotEverFollowedFollowers(List<String> mediaIds,
@@ -109,7 +134,7 @@ public class InstagramFollowService {
 				).orElse(Collections.emptyMap());
 	}
 
-	private List<String> sortTopFollowers(Map<String, Integer> topFollowersScore, Set<String> usersBlacklist) {
+	private List<String> toSortedList(Map<String, Integer> topFollowersScore, Set<String> usersBlacklist, int limit) {
 		LOGGER.info("Sorting top followers list..");
 		return topFollowersScore.entrySet().stream()
 				.sorted((Map.Entry.<String, Integer>comparingByValue().reversed()))
@@ -117,6 +142,7 @@ public class InstagramFollowService {
 				.map(Map.Entry::getKey)
 				.filter(this::neverFollowed)
 				.filter(x -> !usersBlacklist.contains(x))
+				.limit(limit)
 				.collect(Collectors.toList());
 	}
 
@@ -124,15 +150,5 @@ public class InstagramFollowService {
 		return userRepository.findByUsername(mainIGUser.getUsername())
 				.getEverFollowed().stream()
 				.noneMatch(x -> x.getUsername().equals(username));
-	}
-
-	public void unfollow(String username) {
-		try {
-			new IGFollowersReq(mainIGUser).unfollow(username);
-			LOGGER.info("Successfully unfollowed user:{}", username);
-		} catch (Exception e) {
-			LOGGER.error("Cannot unfollow user:{}", username, e);
-			throw new RuntimeException(e);
-		}
 	}
 }

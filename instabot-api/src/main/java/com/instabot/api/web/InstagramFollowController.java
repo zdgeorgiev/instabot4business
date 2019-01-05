@@ -20,31 +20,35 @@ public class InstagramFollowController {
 	@ResponseStatus(HttpStatus.OK)
 	@ApiOperation(value = "Follow user by its username.")
 	public void followUser(
-			@ApiParam(name = "username", value = "Username")
+			@ApiParam(name = "username", value = "Target username to follow.")
 			@RequestParam String username) {
 		instagramFollowService.follow(username);
 	}
 
 	@ResponseBody
-	@RequestMapping(value = "/addFollowers", method = RequestMethod.POST)
-	@ResponseStatus(HttpStatus.CREATED)
-	@ApiOperation(value = "Add top followers for a user in the following queue for the current user")
-	public void addTopTargetFollowers(
-			@ApiParam(name = "username", value = "Target username from which we want to get its top followers")
-			@RequestParam String username,
-
-			@ApiParam(name = "userSortingStrategy", value = "Strategy that define who is top follower")
-			@RequestParam UserSortingStrategyType userSortingStrategy) {
-		instagramFollowService.addTopTargetFollowers(username, userSortingStrategy);
+	@RequestMapping(value = "/unfollow", method = RequestMethod.POST)
+	@ResponseStatus(HttpStatus.OK)
+	@ApiOperation(value = "Unfollow specific user.")
+	public void unfollowUser(
+			@ApiParam(name = "username", value = "Target username to unfollow.")
+			@RequestParam String username) {
+		instagramFollowService.unfollow(username);
 	}
 
 	@ResponseBody
-	@RequestMapping(value = "/unfollow", method = RequestMethod.POST)
-	@ResponseStatus(HttpStatus.OK)
-	@ApiOperation(value = "Unfollow specific user")
-	public void unfollowUser(
-			@ApiParam(name = "username", value = "Target username to unfollow")
-			@RequestParam String username) {
-		instagramFollowService.unfollow(username);
+	@RequestMapping(value = "/processTopFollowers", method = RequestMethod.POST)
+	@ResponseStatus(HttpStatus.CREATED)
+	@ApiOperation(value = "Process the top followers for target based on the sorting strategy and "
+			+ "add most of them to be followed and like some photos for the others.")
+	public void processTopFollowers(
+			@ApiParam(name = "username", value = "Target username from which we want to get its top followers.")
+			@RequestParam String username,
+
+			@ApiParam(name = "userSortingStrategy", value = "Strategy that define who is top follower.")
+			@RequestParam UserSortingStrategyType userSortingStrategy,
+
+			@ApiParam(name = "limit", value = "Top followers to return.")
+			@RequestParam(name = "limit", required = false, defaultValue = "100") Integer limit) {
+		instagramFollowService.processTopFollowers(username, userSortingStrategy, limit);
 	}
 }

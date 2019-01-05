@@ -7,16 +7,16 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SeleniumFactory {
+public class SeleniumIGFactory {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(SeleniumFactory.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(SeleniumIGFactory.class);
 
-	public static final String SELENIUM_DEBUG_MODE = System.setProperty("ig.selenium.debug",
+	private static final String SELENIUM_DEBUG_MODE = System.setProperty("ig.selenium.debug",
 			System.getProperty("ig.selenium.debug", "false"));
 
 	private static RemoteWebDriver driver;
 
-	public static RemoteWebDriver getDriver() {
+	public static RemoteWebDriver getClient() {
 		if (driver == null) {
 			LOGGER.debug("Initializing new Selenium web driver..");
 			createWebDriver();
