@@ -1,4 +1,4 @@
-Instabot-api
+#Instabot-api
 
 `Instagram-bot is bot that helps you to collect more followers in a automated way.` 
 There is an API to successfully operate with commands given by the core. The idea is that through this API
@@ -11,7 +11,7 @@ the main account should do three things -followUser, -unfollowUser, -likePhoto. 
 that collect followers, comments, read the users information, filters - that is done by the fake one
 and if you are making too much requests they will ban the fake account and not the main one.
 
-#Important endpoints:
+##Important endpoints:
 
 * API UI - `localhost:8080/instabot-api/swagger-ui.html#/`
 
@@ -42,7 +42,7 @@ will be added to be followed.
   in your toLike queue.
 
 
-#Mandatory API parameters
+##Mandatory API parameters
 * `-Ddb.username` Mqsql Database username.
 * `-Ddb.password` Mqsql Database password.
 * `-Dig.main.bot.username` Main account username.
@@ -51,7 +51,7 @@ will be added to be followed.
 * `-Dig.fake.bot.password` Fake account password.
 * `-Dwebdriver.chrome.driver="path.to.chrome.driver.exe"` Path to chrome driver used by selenium.
 
-#Optional API parameters
+##Optional API parameters
 * `-Dig.bot.api.max.likes.per.day` [Default: 400] Maximum likes per day.
 * `-Dig.bot.api.max.follows.per.day` [Default: 200] Maximum follows per day.
 * `-Dig.bot.api.scheduled.request.min.hours.to.complete` [Default: 15] Minimum hours to finish the 
@@ -71,7 +71,7 @@ the rest we will like couple of their photos
 * `-Dig.bot.api.top.likers.photos.to.get` [Default: 3] Last photos to get for each top liker
 * `-Dig.bot.api.top.likers.photos.to.return` [Default: 1] Random photos to be liked for each top liker
 
-#Filter parameters
+##Filter parameters
 * `-Dig.bot.api.filter.skip.users.with.more.than.followers` [Default: true] Every user with more than 
 some followers will be skipped
 * `-Dig.bot.api.filter.skip.users.with.more.than.followers.count` [Default: 1500] Don't follow users with more than followers.
