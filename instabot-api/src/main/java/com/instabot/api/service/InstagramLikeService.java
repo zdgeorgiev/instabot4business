@@ -9,6 +9,7 @@ import com.instabot.core.request.IGLikesRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -24,12 +25,15 @@ public class InstagramLikeService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(InstagramLikeService.class);
 
-	private static final Integer TOP_LIKERS_PERCENTAGE_TOFOLLOW = 10;
+	@Value("${ig.bot.api.last.user.photos.to.get:30}")
+	private Integer USER_PHOTOS_TOGET;
 
-	private static final Integer USER_PHOTOS_TOGET = 30;
-
-	private static final Integer TOP_LIKERS_PHOTOS_TOGET = 3;
-	private static final Integer TOP_LIKERS_PHOTOS_TORETURN = 1;
+	@Value("${ig.bot.api.top.likers.percentage.to.follow:10}")
+	private Integer TOP_LIKERS_PERCENTAGE_TOFOLLOW;
+	@Value("${ig.bot.api.top.likers.photos.to.get:3}")
+	private Integer TOP_LIKERS_PHOTOS_TOGET;
+	@Value("${ig.bot.api.top.likers.photos.to.return:1}")
+	private Integer TOP_LIKERS_PHOTOS_TORETURN;
 
 	@Autowired
 	private UserRepository userRepository;
@@ -37,10 +41,10 @@ public class InstagramLikeService {
 	@Autowired
 	private InstagramPhotoService instagramPhotoService;
 
-	private String mainUsername = UsersPoolFactory.getUser(UserType.MAIN).getUsername();
-
 	private IGUser mainIGUser = UsersPoolFactory.getUser(UserType.MAIN);
 	private IGUser fakeIGUser = UsersPoolFactory.getUser(UserType.FAKE);
+
+	private String mainUsername = mainIGUser.getUsername();
 
 	public void likePhoto(String mediaId) {
 		try {

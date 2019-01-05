@@ -1,4 +1,6 @@
-package com.instabot.core.filter;
+package com.instabot.api.filter;
+
+import com.instabot.core.filter.CommentFilter;
 
 public class NotASpamCommentFilter implements CommentFilter {
 

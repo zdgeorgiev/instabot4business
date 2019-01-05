@@ -9,6 +9,7 @@ import com.instabot.core.model.UserType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,19 +27,25 @@ public class InstagramBotService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(InstagramBotService.class);
 
-	private static final Integer MAX_FOLLOWS_PER_DAY = 200;
-	private static final Integer MAX_LIKES_PER_DAY = 400;
+	@Value("${ig.bot.api.max.follows.per.day:200}")
+	private Integer MAX_FOLLOWS_PER_DAY;
+	@Value("${ig.bot.api.max.likes.per.day:400}")
+	private Integer MAX_LIKES_PER_DAY;
 
-	private static final Integer MIN_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH = 15;
-	private static final Integer MAX_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH = 20;
+	@Value("${ig.bot.api.hashtag.photos.to.get:12}")
+	private Integer HASHTAG_PHOTOS_TOGET;
+	@Value("${ig.bot.api.hashtag.photos.to.return:3}")
+	private Integer HASHTAG_PHOTOS_TORETURN;
 
-	private static final Integer HASHTAG_PHOTOS_TOGET = 12;
-	private static final Integer HASHTAG_PHOTOS_TORETURN = 3;
+	@Value("${ig.bot.api.unfollow.percentage:15}")
+	private Integer PERCENTAGE_OF_TOTAL_FOLLOWINGS_TO_BE_UNFOLLOWED;
+	@Value("${ig.bot.api.unfollow.older.than.days:3}")
+	private Integer FOLLOWED_AT_LEAST_DAYS_BEFORE;
 
-	private static final Integer PERCENTAGE_OF_TOTAL_FOLLOWINGS_TO_BE_UNFOLLOWED = 15;
-	private static final Integer FOLLOWED_AT_LEAST_DAYS_BEFORE = 3;
-
-	private IGUser mainIGUser = UsersPoolFactory.getUser(UserType.MAIN);
+	@Value("${ig.bot.api.scheduled.request.min.hours.to.complete:15}")
+	private Integer MIN_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH;
+	@Value("${ig.bot.api.scheduled.request.max.hours.to.complete:20}")
+	private Integer MAX_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH;
 
 	@Autowired
 	private InstagramFollowService instagramFollowService;
@@ -51,6 +58,8 @@ public class InstagramBotService {
 
 	@Autowired
 	private UserRepository userRepository;
+
+	private IGUser mainIGUser = UsersPoolFactory.getUser(UserType.MAIN);
 
 	private String mainUsername = mainIGUser.getUsername();
 
@@ -156,8 +165,23 @@ public class InstagramBotService {
 		LOGGER.info("Liking photos is done for today.");
 	}
 
-	private interface Executor<T> {
+	public void addPhotosFromHashtag() {
+		User dbUser = userRepository.findByUsername(mainUsername);
+		Set<String> hashtags = dbUser.getHashtags();
+		LOGGER.info("Starting to process hashtags {}", hashtags);
 
+		for (String hashtag : hashtags) {
+			List<String> currentHashtagPhotos =
+					instagramPhotoService.getPhotos(HASHTAG, hashtag, HASHTAG_PHOTOS_TOGET, HASHTAG_PHOTOS_TORETURN, true);
+
+			dbUser.getToLike().addAll(currentHashtagPhotos);
+			LOGGER.info("Successfully added {} photos to like for hashtag:{}", currentHashtagPhotos.size(), hashtag);
+		}
+
+		userRepository.saveAndFlush(dbUser);
+	}
+
+	private interface Executor<T> {
 		void execute(T element) throws Exception;
 	}
 
@@ -200,21 +224,5 @@ public class InstagramBotService {
 			return (long) Math
 					.ceil(minTimeToSleepInSeconds + (Math.random() * (maxTimeToSleepInSeconds - minTimeToSleepInSeconds)));
 		}
-	}
-
-	public void addPhotosFromHashtag() {
-		User dbUser = userRepository.findByUsername(mainUsername);
-		Set<String> hashtags = dbUser.getHashtags();
-		LOGGER.info("Starting to process hashtags {}", hashtags);
-
-		for (String hashtag : hashtags) {
-			List<String> currentHashtagPhotos =
-					instagramPhotoService.getPhotos(HASHTAG, hashtag, HASHTAG_PHOTOS_TOGET, HASHTAG_PHOTOS_TORETURN, true);
-
-			dbUser.getToLike().addAll(currentHashtagPhotos);
-			LOGGER.info("Successfully added {} photos to like for hashtag:{}", currentHashtagPhotos.size(), hashtag);
-		}
-
-		userRepository.saveAndFlush(dbUser);
 	}
 }

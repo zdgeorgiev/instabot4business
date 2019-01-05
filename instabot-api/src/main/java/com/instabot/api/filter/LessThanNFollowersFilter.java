@@ -5,12 +5,14 @@ import com.instabot.core.filter.UserFilter;
 import com.instabot.core.model.IGUser;
 import com.instabot.core.model.UserType;
 import org.brunocvcunha.instagram4j.requests.payload.InstagramUser;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.instabot.core.config.IGContants.IG_PROFILE_URL;
 
 public class LessThanNFollowersFilter implements UserFilter {
 
-	private static final int FOLLOWERS_LIMIT = 1500;
+	@Value("${ig.bot.api.skip.users.with.more.than.followers.count:1500}")
+	private Integer FOLLOWERS_LIMIT;
 
 	private IGUser fakeUser = UsersPoolFactory.getUser(UserType.FAKE);
 

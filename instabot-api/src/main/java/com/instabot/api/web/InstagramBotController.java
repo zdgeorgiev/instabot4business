@@ -35,8 +35,6 @@ public class InstagramBotController {
 		instagramBotService.followUsers();
 	}
 
-	// TODO:MAYBE TWO SCHEDULED CANNOT BE EXECUTED AT ONCE AND SECOND IS WAITING THE FIRST TO FINISH ?
-
 	// Every day at 5PM
 	@Scheduled(cron = "0 0 17 * * *")
 	@RequestMapping(value = "/likePhotos", method = RequestMethod.POST)

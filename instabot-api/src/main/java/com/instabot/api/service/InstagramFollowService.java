@@ -1,11 +1,10 @@
 package com.instabot.api.service;
 
-import com.instabot.api.filter.LessThanNFollowersFilter;
+import com.instabot.api.config.FiltersConfig;
 import com.instabot.api.model.UserSortingStrategyType;
 import com.instabot.api.model.entity.User;
 import com.instabot.api.model.repository.UserRepository;
 import com.instabot.api.pool.UsersPoolFactory;
-import com.instabot.core.filter.*;
 import com.instabot.core.model.IGUser;
 import com.instabot.core.model.UserType;
 import com.instabot.core.request.IGCommentsReq;
@@ -14,6 +13,7 @@ import com.instabot.core.strategy.UserSortingStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -27,12 +27,16 @@ public class InstagramFollowService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(InstagramFollowService.class);
 
-	private static final Integer USER_PHOTOS_TOGET = 30;
+	@Value("${ig.bot.api.last.user.photos.to.get:30}")
+	private Integer USER_PHOTOS_TOGET;
 
-	private static final Integer TOP_FOLLOWERS_PERCENTAGE_TOFOLLOW = 75;
+	@Value("${ig.bot.api.top.followers.percentage.to.follow:75}")
+	private Integer TOP_FOLLOWERS_PERCENTAGE_TOFOLLOW;
 
-	private static final Integer TOP_FOLLOWERS_PHOTOS_TOGET = 3;
-	private static final Integer TOP_FOLLOWERS_PHOTOS_TORETURN = 1;
+	@Value("${ig.bot.api.top.followers.photos.to.get:3}")
+	private Integer TOP_FOLLOWERS_PHOTOS_TOGET;
+	@Value("${ig.bot.api.top.followers.photos.to.return:1}")
+	private Integer TOP_FOLLOWERS_PHOTOS_TORETURN;
 
 	@Autowired
 	private UserRepository userRepository;
@@ -110,19 +114,11 @@ public class InstagramFollowService {
 	private Map<String, Integer> findTopNotEverFollowedFollowers(List<String> mediaIds,
 			Class<? extends UserSortingStrategy> userSortingStrategy) {
 
-		List<Class<? extends IGFilter>> filters = Arrays.asList(
-				UserWithProfilePictureFilter.class,
-				PublicProfileFilter.class,
-				NotASpamCommentFilter.class,
-				NotABusinessAccount.class,
-				LessThanNFollowersFilter.class
-		);
-
 		LOGGER.info("Finding top followers from the comments");
 
 		return mediaIds.stream()
 				.map(mediaId -> new IGCommentsReq(fakeIGUser)
-						.applyFilters(filters)
+						.applyFilters(FiltersConfig.getFilters())
 						.applyUserSortingStrategy(userSortingStrategy)
 						.getComments(mediaId))
 				.reduce((a1, a2) -> {
