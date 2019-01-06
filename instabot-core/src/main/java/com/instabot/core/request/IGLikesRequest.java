@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,7 +41,8 @@ public class IGLikesRequest {
 			return likersResult.getUsers().stream().map(user -> user.username).collect(Collectors.toList());
 		} catch (IOException e) {
 			LOGGER.error("Cannot get users who liked {}", mediaId, e);
-			throw new RuntimeException(e);
 		}
+
+		return Collections.emptyList();
 	}
 }

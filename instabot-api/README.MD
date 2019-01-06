@@ -73,8 +73,7 @@ the rest we will like couple of their photos
 
 ## Filter parameters
 * `-Dig.bot.api.filter.skip.users.with.more.than.followers` [Default: true] Every user with more than 
-some followers will be skipped
-* `-Dig.bot.api.filter.skip.users.with.more.than.followers.count` [Default: 1500] Don't follow users with more than followers.
+1500 followers will be skipped
 * `-Dig.bot.api.filter.skip.private.accounts` [Default: true] Skip users with private accounts
 * `-Dig.bot.api.filter.skip.business.accounts` [Default: true] Skip users with business profile
 * `-Dig.bot.api.filter.skip.users.without.profile.picture` [Default: true] Skip users without profile picture
