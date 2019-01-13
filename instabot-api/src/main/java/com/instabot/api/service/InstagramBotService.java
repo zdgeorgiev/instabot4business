@@ -67,17 +67,17 @@ public class InstagramBotService {
 		LOGGER.info("Cleaning following users..");
 		User dbUser = userRepository.findByUsername(mainUsername);
 
-		List<FollowedInfo> currentlyFollowing = getCurrentlyFollowing(dbUser);
+		List<FollowedInfo> unfollowCandidates = getUnfollowCandidates(dbUser);
 
-		currentlyFollowing =
-				currentlyFollowing.stream()
+		unfollowCandidates =
+				unfollowCandidates.stream()
 						.sorted(Comparator.comparing(FollowedInfo::getDateFollowed))
-						.limit(currentlyFollowing.size() / PERCENTAGE_OF_TOTAL_FOLLOWINGS_TO_BE_UNFOLLOWED)
+						.limit(unfollowCandidates.size() / PERCENTAGE_OF_TOTAL_FOLLOWINGS_TO_BE_UNFOLLOWED)
 						.collect(Collectors.toList());
 
 		AtomicInteger unfollowedUsers = new AtomicInteger();
 
-		currentlyFollowing.forEach(user -> {
+		unfollowCandidates.forEach(user -> {
 			try {
 				instagramFollowService.unfollow(user.getUsername());
 				unfollowedUsers.getAndIncrement();
@@ -105,7 +105,7 @@ public class InstagramBotService {
 		LOGGER.info("Successfully unfollowed {} users", unfollowedUsers);
 	}
 
-	private List<FollowedInfo> getCurrentlyFollowing(User dbUser) {
+	private List<FollowedInfo> getUnfollowCandidates(User dbUser) {
 		LocalDateTime now = LocalDateTime.now();
 
 		return dbUser.getEverFollowed().stream()
@@ -126,11 +126,14 @@ public class InstagramBotService {
 				.runTask((username) -> {
 					LOGGER.info("Created follow request for user:{} ({}/{})",
 							username, followedUsers.get() + 1, usersToFollow.size());
-					instagramFollowService.follow(username);
-					dbUser.getToFollow().remove(username);
-					followedUsers.getAndIncrement();
-					dbUser.getEverFollowed().add(new FollowedInfo(username));
-					userRepository.saveAndFlush(dbUser);
+					try {
+						dbUser.getToFollow().remove(username);
+						instagramFollowService.follow(username);
+						followedUsers.getAndIncrement();
+						dbUser.getEverFollowed().add(new FollowedInfo(username));
+					} finally {
+						userRepository.saveAndFlush(dbUser);
+					}
 				});
 
 		LOGGER.info("Successfully followed {} users", followedUsers);
@@ -153,12 +156,13 @@ public class InstagramBotService {
 				.runTask((photoId) -> {
 					LOGGER.info("Created like request for photo:{} ({}/{})",
 							photoId, likedPhotos.get() + 1, photosToLike.size());
-					// First we can remove it because if the photo is deleted
-					// we will get an exception, but we don't care, so will delete it first
-					dbUser.getToLike().remove(photoId);
-					userRepository.saveAndFlush(dbUser);
-					instagramLikeService.likePhoto(photoId);
-					likedPhotos.getAndIncrement();
+					try {
+						dbUser.getToLike().remove(photoId);
+						instagramLikeService.likePhoto(photoId);
+						likedPhotos.getAndIncrement();
+					} finally {
+						userRepository.saveAndFlush(dbUser);
+					}
 				});
 
 		LOGGER.info("Successfully liked {} photos", likedPhotos);

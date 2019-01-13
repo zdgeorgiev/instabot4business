@@ -4,6 +4,7 @@ import com.instabot.core.model.IGUser;
 import org.brunocvcunha.instagram4j.requests.InstagramFollowRequest;
 import org.brunocvcunha.instagram4j.requests.InstagramSearchUsernameRequest;
 import org.brunocvcunha.instagram4j.requests.InstagramUnfollowRequest;
+import org.brunocvcunha.instagram4j.requests.payload.InstagramUser;
 
 import java.io.IOException;
 
@@ -16,12 +17,22 @@ public class IGFollowersReq {
 	}
 
 	public void followUser(String username) throws IOException {
-		long userId = user.getInstagram4jIGClient().sendRequest(new InstagramSearchUsernameRequest(username)).getUser().pk;
-		user.getInstagram4jIGClient().sendRequest(new InstagramFollowRequest(userId));
+		InstagramUser user = this.user.getInstagram4jIGClient().sendRequest(new InstagramSearchUsernameRequest(username)).getUser();
+
+		if (user == null) {
+			throw new IllegalStateException("User " + username + " is no longer available.");
+		}
+
+		this.user.getInstagram4jIGClient().sendRequest(new InstagramFollowRequest(user.pk));
 	}
 
 	public void unfollow(String username) throws Exception {
-		long userId = user.getInstagram4jIGClient().sendRequest(new InstagramSearchUsernameRequest(username)).getUser().pk;
-		user.getInstagram4jIGClient().sendRequest(new InstagramUnfollowRequest(userId));
+		InstagramUser user = this.user.getInstagram4jIGClient().sendRequest(new InstagramSearchUsernameRequest(username)).getUser();
+
+		if (user == null) {
+			throw new IllegalStateException("User " + username + " is no longer available.");
+		}
+
+		this.user.getInstagram4jIGClient().sendRequest(new InstagramUnfollowRequest(user.pk));
 	}
 }
