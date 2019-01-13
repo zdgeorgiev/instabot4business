@@ -76,7 +76,9 @@ public class InstagramLikeService {
 		dbUser.getToFollow().addAll(toFollow);
 
 		// Add photos in the liking queue from each user in toLike users
-		for (String user : toLike) {
+		for (int i = 0; i < toLike.size(); i++) {
+			String user = toLike.get(i);
+			LOGGER.info("Processing user {}: ({}/{})", user, i + 1, toLike.size());
 			dbUser.getToLike().addAll(instagramPhotoService
 					.getPhotos(USER, user, TOP_LIKERS_PHOTOS_TOGET, TOP_LIKERS_PHOTOS_TORETURN, true));
 		}

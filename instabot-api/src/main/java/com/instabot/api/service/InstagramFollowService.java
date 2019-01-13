@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -53,7 +52,7 @@ public class InstagramFollowService {
 		try {
 			new IGFollowersReq(mainIGUser).followUser(username);
 			LOGGER.info("{} user:{} followed {}", mainIGUser.getUserType(), mainIGUser.getUsername(), username);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			LOGGER.error("Cannot follow user {}", username, e);
 			throw new RuntimeException(e);
 		}

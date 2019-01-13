@@ -72,8 +72,6 @@ the rest we will like couple of their photos
 * `-Dig.bot.api.top.likers.photos.to.return` [Default: 1] Random photos to be liked for each top liker
 
 ## Filter parameters
-* `-Dig.bot.api.filter.skip.users.with.more.than.followers` [Default: true] Every user with more than 
-1500 followers will be skipped
 * `-Dig.bot.api.filter.skip.private.accounts` [Default: true] Skip users with private accounts
 * `-Dig.bot.api.filter.skip.business.accounts` [Default: true] Skip users with business profile
 * `-Dig.bot.api.filter.skip.users.without.profile.picture` [Default: true] Skip users without profile picture
