@@ -7,13 +7,13 @@ Anyway there are couple of manual very important things to do to keep the bot wo
 When you start the api if all the parameters are set you will have two instagram accounts logged.
 One main account and one fake account. The idea is that the main account (which you want to boost)
 and the fake one is that account who is used for collecting information, because in the end
-the main account should do three things -followUser, -unfollowUser, -likePhoto. Any other functions
+the main account should do four things -followUser, -unfollowUser, -likePhoto -uploadPhoto. Any other functions
 that collect followers, comments, read the users information, filters - that is done by the fake one
 and if you are making too much requests they will ban the fake account and not the main one.
 
 ## Important endpoints:
 
-* API UI - `localhost:8080/instabot-api/swagger-ui.html#/`
+* API REST Documentation - `localhost:8080/instabot-api/swagger-ui.html#/`
 
 * Manual execution:
   * POST `/follow/processTopFollowers` This will get last photos for a user, then it will collect all comments
