@@ -26,7 +26,7 @@ public class IGFollowersReq {
 		this.user.getInstagram4jIGClient().sendRequest(new InstagramFollowRequest(user.pk));
 	}
 
-	public void unfollow(String username) throws Exception {
+	public void unfollow(String username) throws IOException {
 		InstagramUser user = this.user.getInstagram4jIGClient().sendRequest(new InstagramSearchUsernameRequest(username)).getUser();
 
 		if (user == null) {

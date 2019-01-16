@@ -6,17 +6,19 @@ import com.instabot.api.model.repository.UserRepository;
 import com.instabot.api.pool.UsersPoolFactory;
 import com.instabot.core.model.IGUser;
 import com.instabot.core.model.UserType;
+import com.instabot.core.request.IGUploadPhotoReq;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -46,6 +48,13 @@ public class InstagramBotService {
 	private Integer MIN_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH;
 	@Value("${ig.bot.api.scheduled.request.max.hours.to.complete:20}")
 	private Integer MAX_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH;
+
+	@Value("${ig.bot.api.photos.to.upload:2}")
+	private Integer PHOTOS_TO_UPLOAD;
+	@Value("${ig.bot.api.photos.dir.path:}")
+	private String PHOTOS_DIR_PATH;
+	@Value("${ig.bot.api.photos.sleep.between.each.upload:60}")
+	private Integer PHOTOS_WAIT_BEFORE_UPLOAD_NEXT_MINTUES;
 
 	@Autowired
 	private InstagramFollowService instagramFollowService;
@@ -183,6 +192,50 @@ public class InstagramBotService {
 		}
 
 		userRepository.saveAndFlush(dbUser);
+	}
+
+	public void uploadPhotos() {
+		LOGGER.info("Starting to upload photos..");
+
+		File picturesDir = new File(PHOTOS_DIR_PATH);
+
+		if (!picturesDir.exists() || !picturesDir.isDirectory() || picturesDir.listFiles() == null)
+			return;
+
+		List<File> allPhotos = Arrays.stream(
+				Objects.requireNonNull(picturesDir.listFiles((dir, name) -> name.contains(".jpg") || name.contains(".png"))))
+				.collect(Collectors.toList());
+
+		CopyOnWriteArrayList<File> photosToUpload = new CopyOnWriteArrayList<>();
+		photosToUpload.addAll(allPhotos.subList(0, Math.min(allPhotos.size(), PHOTOS_TO_UPLOAD)));
+
+		int uploadedPhotosCount = 0;
+
+		for (File photo : photosToUpload) {
+			try {
+				String description = getDescriptionIfAvailable(photo.getName());
+				new IGUploadPhotoReq(mainIGUser).uploadPhoto(photo, description);
+				LOGGER.info("Successfully upload photo ({}/{}) -> {}",
+						++uploadedPhotosCount, photosToUpload.size(), photo.getName());
+				Thread.sleep(PHOTOS_WAIT_BEFORE_UPLOAD_NEXT_MINTUES * 1000 * 1000);
+			} catch (Exception e) {
+				LOGGER.error("Cannot upload photo:{}", photo.getAbsolutePath(), e);
+			} finally {
+				photo.delete();
+			}
+		}
+
+		LOGGER.info("Finished uploading photos for today.");
+	}
+
+	private String getDescriptionIfAvailable(String photoName) throws IOException {
+		File descriptionFile = new File(PHOTOS_DIR_PATH, photoName.substring(0, photoName.indexOf(".")) + ".txt");
+		String content = descriptionFile.exists() ? FileUtils.readFileToString(descriptionFile) : "";
+
+		if (descriptionFile.exists())
+			descriptionFile.delete();
+
+		return content;
 	}
 
 	private interface Executor<T> {

@@ -44,6 +44,15 @@ public class InstagramBotController {
 		instagramBotService.likePhotos();
 	}
 
+	// Every day at 9PM
+	@Scheduled(cron = "0 0 21 * * *")
+	@RequestMapping(value = "/uploadPhotos", method = RequestMethod.POST)
+	@ResponseStatus(HttpStatus.OK)
+	@ApiOperation(value = "Start uploading photos from the given directory")
+	public void uploadPhotos() {
+		instagramBotService.uploadPhotos();
+	}
+
 	// Every day every hour
 	@Scheduled(cron = "0 0 * * * *")
 	@RequestMapping(value = "/addPhotosFromHashtag", method = RequestMethod.POST)
