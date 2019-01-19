@@ -36,7 +36,7 @@ public class InstagramBotService {
 	@Value("${ig.bot.api.max.unfollows.per.day:250}")
 	private Integer MAX_UNFOLLOWS_PER_DAY;
 
-	@Value("${ig.bot.api.unfollow.older.than.days:0}")
+	@Value("${ig.bot.api.unfollow.older.than.days:3}")
 	private Integer FOLLOWED_AT_LEAST_DAYS_BEFORE;
 
 	@Value("${ig.bot.api.hashtag.photos.to.get:12}")
