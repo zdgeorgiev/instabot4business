@@ -29,8 +29,8 @@ will be added to be followed.
   * GET `/hashtag` view all hashtags that you have.
 
 * Automated execution:
-  * `/bot/cleanFollowings`(Every day at 5PM) This function will unfollow percentage of your
-  followings which are at least couple of days older.
+  * `/bot/cleanFollowings`(Every day at 5PM) This function will users that you are following for at least given number of days.
+  The function will finish in between 15-20 hours, so a random timeout will be set between each unfollow request.
   * `/bot/followUsers`(Every day at 5PM) This function will get the max users you can follow for a day
   from toFollow queue and will start following them. The function will finish in between 15-20 hours, so a random
   timeout will be set between each following request.
@@ -55,11 +55,11 @@ will be added to be followed.
 ## Optional API parameters
 * `-Dig.bot.api.max.likes.per.day` [Default: 400] Maximum likes per day.
 * `-Dig.bot.api.max.follows.per.day` [Default: 200] Maximum follows per day.
+* `-Dig.bot.api.max.unfollows.per.day` [Default: 250] Maximum unfollows per day.
 * `-Dig.bot.api.scheduled.request.min.hours.to.complete` [Default: 15] Minimum hours to finish the 
 scheduled requests (liking and following)
 * `-Dig.bot.api.scheduled.request.max.hours.to.complete` [Default: 20] Maximum hours to finish the 
 scheduled requests (liking and following)
-* `-Dig.bot.api.unfollow.percentage` [Default: 15] Percentage of total followings to be unfollowed
 * `-Dig.bot.api.unfollow.older.than.days` [Default: 3] Unfollow users which you follow for at least days
 * `-Dig.bot.api.hashtag.photos.to.get` [Default: 12] Last photos to get for each hashtag
 * `-Dig.bot.api.hashtag.photos.to.return` [Default: 3] Random photos to be returned for each hashtag

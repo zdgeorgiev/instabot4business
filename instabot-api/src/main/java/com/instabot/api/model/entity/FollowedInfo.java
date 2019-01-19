@@ -28,7 +28,6 @@ public class FollowedInfo {
 	private FollowStatus followStatus;
 
 	public enum FollowStatus {
-		UNKNOWN,
 		FOLLOWING,
 		NOT_FOLLOWING
 	}
@@ -37,14 +36,9 @@ public class FollowedInfo {
 		this.dateFollowed = LocalDateTime.now();
 	}
 
-	public FollowedInfo(String username) {
+	public FollowedInfo(String username, FollowStatus followStatus) {
 		this();
 		this.username = username;
-		this.followStatus = FollowStatus.FOLLOWING;
-	}
-
-	public FollowedInfo(String username, FollowStatus followStatus) {
-		this(username);
 		this.followStatus = followStatus;
 	}
 

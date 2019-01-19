@@ -33,16 +33,16 @@ public class InstagramBotService {
 	private Integer MAX_FOLLOWS_PER_DAY;
 	@Value("${ig.bot.api.max.likes.per.day:400}")
 	private Integer MAX_LIKES_PER_DAY;
+	@Value("${ig.bot.api.max.unfollows.per.day:250}")
+	private Integer MAX_UNFOLLOWS_PER_DAY;
+
+	@Value("${ig.bot.api.unfollow.older.than.days:0}")
+	private Integer FOLLOWED_AT_LEAST_DAYS_BEFORE;
 
 	@Value("${ig.bot.api.hashtag.photos.to.get:12}")
 	private Integer HASHTAG_PHOTOS_TOGET;
 	@Value("${ig.bot.api.hashtag.photos.to.return:3}")
 	private Integer HASHTAG_PHOTOS_TORETURN;
-
-	@Value("${ig.bot.api.unfollow.percentage:15}")
-	private Integer PERCENTAGE_OF_TOTAL_FOLLOWINGS_TO_BE_UNFOLLOWED;
-	@Value("${ig.bot.api.unfollow.older.than.days:3}")
-	private Integer FOLLOWED_AT_LEAST_DAYS_BEFORE;
 
 	@Value("${ig.bot.api.scheduled.request.min.hours.to.complete:15}")
 	private Integer MIN_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH;
@@ -76,42 +76,30 @@ public class InstagramBotService {
 		LOGGER.info("Cleaning following users..");
 		User dbUser = userRepository.findByUsername(mainUsername);
 
-		List<FollowedInfo> unfollowCandidates = getUnfollowCandidates(dbUser);
-
-		unfollowCandidates =
-				unfollowCandidates.stream()
-						.sorted(Comparator.comparing(FollowedInfo::getDateFollowed))
-						.limit(unfollowCandidates.size() / PERCENTAGE_OF_TOTAL_FOLLOWINGS_TO_BE_UNFOLLOWED)
-						.collect(Collectors.toList());
+		Collection<FollowedInfo> usersToUnfollow = getNElements(getUnfollowCandidates(dbUser), MAX_UNFOLLOWS_PER_DAY);
 
 		AtomicInteger unfollowedUsers = new AtomicInteger();
 
-		unfollowCandidates.forEach(user -> {
-			try {
-				instagramFollowService.unfollow(user.getUsername());
-				unfollowedUsers.getAndIncrement();
+		new AutoSleepExecutor<>(usersToUnfollow, MAX_UNFOLLOWS_PER_DAY)
+				.runTask(followedInfo -> {
+					String username = followedInfo.getUsername();
+					LOGGER.info("Created unfollow request for user:{} ({}/{})",
+							username, unfollowedUsers.incrementAndGet(), usersToUnfollow.size());
 
-				// Retrieve the follower info for the user
-				FollowedInfo currentFollowerInfo =
+					try {
+						instagramFollowService.unfollow(username);
 						dbUser.getEverFollowed().stream()
-								.filter(x -> x.getUsername().equals(user.getUsername()))
-								.findFirst().orElseThrow(RuntimeException::new);
+								.filter(x -> x.getUsername().equals(followedInfo.getUsername()))
+								.findFirst().get()
+								.setFollowStatus(FollowedInfo.FollowStatus.NOT_FOLLOWING);
+					} catch (Exception e) {
+						LOGGER.error("Cannot unfollow user:{}", username, e);
+					} finally {
+						userRepository.saveAndFlush(dbUser);
+					}
+				});
 
-				// remove it from the following list
-				dbUser.getEverFollowed().remove(currentFollowerInfo);
-
-				// change the status to not following
-				currentFollowerInfo.setFollowStatus(FollowedInfo.FollowStatus.NOT_FOLLOWING);
-
-				// add again in the collection but now its marked as not following
-				dbUser.getEverFollowed().add(currentFollowerInfo);
-				userRepository.saveAndFlush(dbUser);
-			} catch (Exception e) {
-				LOGGER.error("Cannot unfollow user:{}", user.getUsername(), e);
-			}
-		});
-
-		LOGGER.info("Successfully unfollowed {} users", unfollowedUsers);
+		LOGGER.info("Unfollowing users is done for today.");
 	}
 
 	private List<FollowedInfo> getUnfollowCandidates(User dbUser) {
@@ -134,22 +122,20 @@ public class InstagramBotService {
 		new AutoSleepExecutor<>(usersToFollow, MAX_FOLLOWS_PER_DAY)
 				.runTask((username) -> {
 					LOGGER.info("Created follow request for user:{} ({}/{})",
-							username, followedUsers.get() + 1, usersToFollow.size());
+							username, followedUsers.incrementAndGet(), usersToFollow.size());
 					try {
 						dbUser.getToFollow().remove(username);
 						instagramFollowService.follow(username);
-						followedUsers.getAndIncrement();
-						dbUser.getEverFollowed().add(new FollowedInfo(username));
+						dbUser.getEverFollowed().add(new FollowedInfo(username, FollowedInfo.FollowStatus.FOLLOWING));
 					} finally {
 						userRepository.saveAndFlush(dbUser);
 					}
 				});
 
-		LOGGER.info("Successfully followed {} users", followedUsers);
 		LOGGER.info("Following users is done for today.");
 	}
 
-	private Collection<String> getNElements(Set<String> collection, int n) {
+	private <T> Collection<T> getNElements(Collection<T> collection, int n) {
 		return collection.stream().limit(n).collect(Collectors.toList());
 	}
 
@@ -164,17 +150,15 @@ public class InstagramBotService {
 		new AutoSleepExecutor<>(photosToLike, MAX_LIKES_PER_DAY)
 				.runTask((photoId) -> {
 					LOGGER.info("Created like request for photo:{} ({}/{})",
-							photoId, likedPhotos.get() + 1, photosToLike.size());
+							photoId, likedPhotos.incrementAndGet(), photosToLike.size());
 					try {
 						dbUser.getToLike().remove(photoId);
 						instagramLikeService.likePhoto(photoId);
-						likedPhotos.getAndIncrement();
 					} finally {
 						userRepository.saveAndFlush(dbUser);
 					}
 				});
 
-		LOGGER.info("Successfully liked {} photos", likedPhotos);
 		LOGGER.info("Liking photos is done for today.");
 	}
 
@@ -217,7 +201,7 @@ public class InstagramBotService {
 				new IGUploadPhotoReq(mainIGUser).uploadPhoto(photo, description);
 				LOGGER.info("Successfully upload photo ({}/{}) -> {}",
 						++uploadedPhotosCount, photosToUpload.size(), photo.getName());
-				Thread.sleep(PHOTOS_WAIT_BEFORE_UPLOAD_NEXT_MINTUES * 1000 * 1000);
+				Thread.sleep(PHOTOS_WAIT_BEFORE_UPLOAD_NEXT_MINTUES * 1000 * 60);
 			} catch (Exception e) {
 				LOGGER.error("Cannot upload photo:{}", photo.getAbsolutePath(), e);
 			} finally {
