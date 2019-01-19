@@ -40,7 +40,7 @@ will be added to be followed.
   * `/bot/addPhotosFromHashtag` (Every day every hour) This function will iterate over all your hashtags
   and will select couple of photos to be liked for each hashtag. The chosen photoIds will be added
   in your toLike queue.
-  * `/bot/uploadPhotos` (Every day at 9PM) This function will upload photos to your timeline from given directory
+  * `/bot/uploadPhotos` (Every day at 8PM) This function will upload photos to your timeline from given directory
 
 
 ## Mandatory API parameters
@@ -73,7 +73,7 @@ the rest we will like couple of their photos
 * `-Dig.bot.api.top.likers.photos.to.return` [Default: 1] Random photos to be liked for each top liker
 * `-Dig.bot.api.photos.dir.path` [Default: ""] Directory of the photos (Maybe default is the dir from where the app is invoked).
 Photos must be .jpg or .png and if there is file with the same name but .txt it will be used as a description.
-* `-Dig.bot.api.photos.to.upload` [Default: 2] Photos to upload per each iteration
+* `-Dig.bot.api.photos.to.upload` [Default: 3] Photos to upload per each iteration (each every 1 hour)
 * `-Dig.bot.api.photos.sleep.between.each.upload` [Default: 60] Minutes to wait before upload the next photo
 
 ## Filter parameters

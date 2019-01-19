@@ -49,7 +49,7 @@ public class InstagramBotService {
 	@Value("${ig.bot.api.scheduled.request.max.hours.to.complete:20}")
 	private Integer MAX_HOURS_FOR_SCHEDULED_REQUEST_TO_FINISH;
 
-	@Value("${ig.bot.api.photos.to.upload:2}")
+	@Value("${ig.bot.api.photos.to.upload:3}")
 	private Integer PHOTOS_TO_UPLOAD;
 	@Value("${ig.bot.api.photos.dir.path:}")
 	private String PHOTOS_DIR_PATH;
