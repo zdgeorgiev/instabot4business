@@ -87,11 +87,11 @@ public class InstagramBotService {
 							username, unfollowedUsers.incrementAndGet(), usersToUnfollow.size());
 
 					try {
-						instagramFollowService.unfollow(username);
 						dbUser.getEverFollowed().stream()
 								.filter(x -> x.getUsername().equals(followedInfo.getUsername()))
 								.findFirst().get()
 								.setFollowStatus(FollowedInfo.FollowStatus.NOT_FOLLOWING);
+						instagramFollowService.unfollow(username);
 					} catch (Exception e) {
 						LOGGER.error("Cannot unfollow user:{}", username, e);
 					} finally {
@@ -201,11 +201,10 @@ public class InstagramBotService {
 				new IGUploadPhotoReq(mainIGUser).uploadPhoto(photo, description);
 				LOGGER.info("Successfully upload photo ({}/{}) -> {}",
 						++uploadedPhotosCount, photosToUpload.size(), photo.getName());
+				photo.delete();
 				Thread.sleep(PHOTOS_WAIT_BEFORE_UPLOAD_NEXT_MINTUES * 1000 * 60);
 			} catch (Exception e) {
 				LOGGER.error("Cannot upload photo:{}", photo.getAbsolutePath(), e);
-			} finally {
-				photo.delete();
 			}
 		}
 
