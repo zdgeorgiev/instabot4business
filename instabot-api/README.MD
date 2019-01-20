@@ -1,16 +1,5 @@
 # Instabot-api
 
-`Instagram-bot is bot that helps you to collect more followers in a automated way.` 
-There is an API to successfully operate with commands given by the core. The idea is that through this API
-you can do certain functions by yourself, because in the end its a BOT and not a manual program.
-Anyway there are couple of manual very important things to do to keep the bot workflow working.
-When you start the api if all the parameters are set you will have two instagram accounts logged.
-One main account and one fake account. The idea is that the main account (which you want to boost)
-and the fake one is that account who is used for collecting information, because in the end
-the main account should do four things -followUser, -unfollowUser, -likePhoto -uploadPhoto. Any other functions
-that collect followers, comments, read the users information, filters - that is done by the fake one
-and if you are making too much requests they will ban the fake account and not the main one.
-
 ## Important endpoints:
 
 * API REST Documentation - `localhost:8080/instabot-api/swagger-ui.html#/`
