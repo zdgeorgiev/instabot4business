@@ -95,7 +95,7 @@ public class InstagramBotService {
 					} catch (Exception e) {
 						LOGGER.error("Cannot unfollow user:{}", username, e);
 					} finally {
-						userRepository.saveAndFlush(dbUser);
+						userRepository.flush();
 					}
 				});
 
@@ -121,14 +121,14 @@ public class InstagramBotService {
 
 		new AutoSleepExecutor<>(usersToFollow, MAX_FOLLOWS_PER_DAY)
 				.runTask((username) -> {
-					LOGGER.info("Created follow request for user:{} ({}/{})",
-							username, followedUsers.incrementAndGet(), usersToFollow.size());
 					try {
+						LOGGER.info("Created follow request for user:{} ({}/{})",
+								username, followedUsers.incrementAndGet(), usersToFollow.size());
 						dbUser.getToFollow().remove(username);
 						instagramFollowService.follow(username);
 						dbUser.getEverFollowed().add(new FollowedInfo(username, FollowedInfo.FollowStatus.FOLLOWING));
 					} finally {
-						userRepository.saveAndFlush(dbUser);
+						userRepository.flush();
 					}
 				});
 
@@ -155,7 +155,7 @@ public class InstagramBotService {
 						dbUser.getToLike().remove(photoId);
 						instagramLikeService.likePhoto(photoId);
 					} finally {
-						userRepository.saveAndFlush(dbUser);
+						userRepository.flush();
 					}
 				});
 
@@ -175,7 +175,7 @@ public class InstagramBotService {
 			LOGGER.info("Successfully added {} photos to like for hashtag:{}", currentHashtagPhotos.size(), hashtag);
 		}
 
-		userRepository.saveAndFlush(dbUser);
+		userRepository.flush();
 	}
 
 	public void uploadPhotos() {
