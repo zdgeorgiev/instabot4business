@@ -29,7 +29,7 @@ will be added to be followed.
   * `/bot/addPhotosFromHashtag` (Every day every hour) This function will iterate over all your hashtags
   and will select couple of photos to be liked for each hashtag. The chosen photoIds will be added
   in your toLike queue.
-  * `/bot/uploadPhotos` (Every day at 8PM) This function will upload photos to your timeline from given directory
+  * `/bot/uploadPhotos` (Every day at 8PM) This function will upload photos to your timeline from given directory on every hour so on
 
 
 ## Mandatory API parameters
