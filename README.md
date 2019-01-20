@@ -11,7 +11,7 @@ Instagram4business is a bot that helps you to collect more followers in a automa
 
 
 # Result
-I've made a page and thats the actual result of running the bot for a week. As you can see its pretty decent.
+I've made a page and thats the actual result of running the bot for a week without any action from my side. As you can see its pretty decent.
 
 ![alt text](https://i.imgur.com/7s3lXaI.jpg)
 
