@@ -87,11 +87,11 @@ public class InstagramBotService {
 							username, unfollowedUsers.incrementAndGet(), usersToUnfollow.size());
 
 					try {
+						instagramFollowService.unfollow(username);
 						dbUser.getEverFollowed().stream()
 								.filter(x -> x.getUsername().equals(followedInfo.getUsername()))
 								.findFirst().get()
 								.setFollowStatus(FollowedInfo.FollowStatus.NOT_FOLLOWING);
-						instagramFollowService.unfollow(username);
 					} catch (Exception e) {
 						LOGGER.error("Cannot unfollow user:{}", username, e);
 					} finally {
