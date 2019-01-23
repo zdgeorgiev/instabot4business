@@ -88,20 +88,19 @@ public class InstagramFollowService {
 		List<String> toFollow = topNotEverFollowedFollowers.subList(0, usersToFollow);
 		List<String> toLike = topNotEverFollowedFollowers.subList(usersToFollow, usersToFollow + usersToLike);
 
-		// Add toFollow users in the following queue
 		dbUser.getToFollow().addAll(toFollow);
 
-		// Add photos in the liking queue from each user in toLike users
+		int photosAdded = 0;
 		for (String user : toLike) {
-			dbUser.getToLike().addAll(instagramPhotoService
-					.getPhotos(USER, user, TOP_FOLLOWERS_PHOTOS_TOGET, TOP_FOLLOWERS_PHOTOS_TORETURN, true));
+			List<String> userPhotosToLIke = instagramPhotoService
+					.getPhotos(USER, user, TOP_FOLLOWERS_PHOTOS_TOGET, TOP_FOLLOWERS_PHOTOS_TORETURN, true);
+			dbUser.getToLike().addAll(userPhotosToLIke);
+			photosAdded += userPhotosToLIke.size();
 		}
 
-		userRepository.saveAndFlush(dbUser);
-		LOGGER.info("Added {} new users to follow from top followers for user:{}",
-				toFollow.size(), username);
-		LOGGER.info("Added {} new photos to like from top followers for user:{}",
-				toLike.size() * TOP_FOLLOWERS_PHOTOS_TORETURN, username);
+		userRepository.flush();
+		LOGGER.info("Added {} new users to follow from top followers for user:{}", toFollow.size(), username);
+		LOGGER.info("Added {} new photos to like from top followers for user:{}", photosAdded, username);
 	}
 
 	private List<String> getTopNotEverFollowedFollowers(List<String> mediaIds,
