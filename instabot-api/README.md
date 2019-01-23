@@ -57,7 +57,6 @@ scheduled requests (liking and following)
 the rest we will like couple of their photos
 * `-Dig.bot.api.top.followers.photos.to.get` [Default: 3] Last photos to get for each top follower
 * `-Dig.bot.api.top.followers.photos.to.return` [Default: 1] Random photos to be liked for each top follower
-* `-Dig.bot.api.top.likers.percentage.to.follow` [Default: 10] Percentage of top likers to be followed
 * `-Dig.bot.api.top.likers.photos.to.get` [Default: 3] Last photos to get for each top liker
 * `-Dig.bot.api.top.likers.photos.to.return` [Default: 1] Random photos to be liked for each top liker
 * `-Dig.bot.api.photos.dir.path` [Default: ""] Directory of the photos (Maybe default is the dir from where the app is invoked).

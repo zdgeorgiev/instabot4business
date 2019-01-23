@@ -28,8 +28,6 @@ public class InstagramLikeService {
 	@Value("${ig.bot.api.last.user.photos.to.get:30}")
 	private Integer USER_PHOTOS_TOGET;
 
-	@Value("${ig.bot.api.top.likers.percentage.to.follow:10}")
-	private Integer TOP_LIKERS_PERCENTAGE_TOFOLLOW;
 	@Value("${ig.bot.api.top.likers.photos.to.get:3}")
 	private Integer TOP_LIKERS_PHOTOS_TOGET;
 	@Value("${ig.bot.api.top.likers.photos.to.return:1}")
@@ -65,29 +63,20 @@ public class InstagramLikeService {
 				.getPhotos(USER, username, USER_PHOTOS_TOGET, USER_PHOTOS_TOGET, false);
 
 		List<String> topLikers = toSortedList(findTopLikers(userPhotoIds), limit);
+		int photosAdded = 0;
 
-		int usersToFollow = (int) (topLikers.size() * (TOP_LIKERS_PERCENTAGE_TOFOLLOW / 100.0));
-		int usersToLike = topLikers.size() - usersToFollow;
+		for (int i = 0; i < topLikers.size(); i++) {
+			String user = topLikers.get(i);
+			LOGGER.info("Processing user {}: ({}/{})", user, i + 1, topLikers.size());
 
-		List<String> toLike = topLikers.subList(0, usersToLike);
-		List<String> toFollow = topLikers.subList(usersToLike, usersToLike + usersToFollow);
-
-		// Add toFollow users in the following queue
-		dbUser.getToFollow().addAll(toFollow);
-
-		// Add photos in the liking queue from each user in toLike users
-		for (int i = 0; i < toLike.size(); i++) {
-			String user = toLike.get(i);
-			LOGGER.info("Processing user {}: ({}/{})", user, i + 1, toLike.size());
-			dbUser.getToLike().addAll(instagramPhotoService
-					.getPhotos(USER, user, TOP_LIKERS_PHOTOS_TOGET, TOP_LIKERS_PHOTOS_TORETURN, true));
+			List<String> userPhotosToLIke = instagramPhotoService
+					.getPhotos(USER, user, TOP_LIKERS_PHOTOS_TOGET, TOP_LIKERS_PHOTOS_TORETURN, true);
+			dbUser.getToLike().addAll(userPhotosToLIke);
+			photosAdded += userPhotosToLIke.size();
 		}
 
-		userRepository.saveAndFlush(dbUser);
-		LOGGER.info("Added {} new users to follow from top likers for user:{}",
-				toFollow.size(), username);
-		LOGGER.info("Added {} new photos to to like from top likers for user:{}",
-				toLike.size() * TOP_LIKERS_PHOTOS_TORETURN, username);
+		userRepository.flush();
+		LOGGER.info("Added {} new photos to to like from top likers for user:{}", photosAdded, username);
 	}
 
 	private Map<String, Integer> findTopLikers(List<String> userPhotoIds) {
