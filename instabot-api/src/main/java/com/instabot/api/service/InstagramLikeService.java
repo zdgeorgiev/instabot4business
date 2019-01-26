@@ -76,7 +76,7 @@ public class InstagramLikeService {
 		}
 
 		userRepository.flush();
-		LOGGER.info("Added {} new photos to to like from top likers for user:{}", photosAdded, username);
+		LOGGER.info("Added {} new photos to like from top likers for user:{}", photosAdded, username);
 	}
 
 	private Map<String, Integer> findTopLikers(List<String> userPhotoIds) {
