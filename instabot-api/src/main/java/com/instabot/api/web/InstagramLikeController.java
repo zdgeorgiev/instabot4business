@@ -19,7 +19,7 @@ public class InstagramLikeController {
 	@ResponseStatus(HttpStatus.OK)
 	@ApiOperation(value = "Like a photo.")
 	public void likePhoto(
-			@ApiParam(name = "photo", value = "Photo id")
+			@ApiParam(name = "mediaId", value = "MediaId id.")
 			@RequestParam String mediaId) {
 		instagramLikeService.likePhoto(mediaId);
 	}
@@ -28,7 +28,7 @@ public class InstagramLikeController {
 	@RequestMapping(value = "/processTopLikers", method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.CREATED)
 	@ApiOperation(value = "Process the top likers for target based on that who likes the most "
-			+ "add most of them to like some of their photos and small part of them to be followed.")
+			+ "add couple of their photos to be liked.")
 	public void processTopLikers(
 			@ApiParam(name = "username", value = "Target username from which we want to get its top likers.")
 			@RequestParam String username,

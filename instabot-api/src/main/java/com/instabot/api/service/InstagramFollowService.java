@@ -91,7 +91,9 @@ public class InstagramFollowService {
 		dbUser.getToFollow().addAll(toFollow);
 
 		int photosAdded = 0;
-		for (String user : toLike) {
+		for (int i = 0; i < toLike.size(); i++) {
+			String user = toLike.get(i);
+			LOGGER.info("Processing user {}: ({}/{})", user, i + 1, toLike.size());
 			List<String> userPhotosToLIke = instagramPhotoService
 					.getPhotos(USER, user, TOP_FOLLOWERS_PHOTOS_TOGET, TOP_FOLLOWERS_PHOTOS_TORETURN, true);
 			dbUser.getToLike().addAll(userPhotosToLIke);
